@@ -1447,16 +1447,21 @@ export function htmlArtistProfile(data) {
            let min = 0;
            for(let i=1; i<colCount; i++) if(colHeights[i] < colHeights[min]) min = i;
            
+
            // 1. 先提取标题
            const titleText = (item.caption || '').split('\\n')[0];
 
            const card = document.createElement('a');
            card.href = `/detail/${item.id}`;
            card.className = 'img-card';
-           
-           card.innerHTML = `<img src="/image/${item.file_name}?dl=jpg" loading="lazy" onload="this.classList.add('loaded')" style="aspect-ratio:${w}/${h}">
-              <div class="meta">
-              <div class="title">${titleText}</div></div>`;
+           // 2. 在 innerHTML 里加入 .meta 和 .title
+           card.innerHTML = `
+               <img src="/image/${item.file_name}?dl=jpg" loading="lazy" onload="this.classList.add('loaded')" style="aspect-ratio:${w}/${h}">
+               <div class="meta">
+                   <div class="title">${titleText}</div>
+               </div>
+           `;
+
            
            cols[min].appendChild(card);
            colHeights[min] += ratio;
