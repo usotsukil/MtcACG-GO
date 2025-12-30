@@ -196,60 +196,53 @@ export async function handleArtists(url, env) {
   });
 }
 
-// === 5. 画师个人主页 (修正版) ===
+// logic.js
+
 export async function handleArtistProfile(artistName, url, env) {
   const artist = decodeURIComponent(artistName);
 
-  // 1. 获取基础信息：总数、最近更新时间、最新的一张图作为背景
-  const metaSql = `
-    SELECT 
-      COUNT(*) as count, 
-      MAX(created_at) as last_update, 
-      MAX(file_name) as cover
-    FROM images 
-    WHERE artist = ?
-  `;
+  // 1. 获取基础统计
+  const metaSql = `SELECT COUNT(*) as count, MAX(created_at) as last_update FROM images WHERE artist = ?`;
   const meta = await env.DB.prepare(metaSql).bind(artist).first();
 
   if (!meta || meta.count === 0) {
     return new Response("Artist not found", { status: 404 });
   }
 
-  // 2. 智能分析平台来源
-  // 我们查该画师最近的 10 张图，看它们的 ID 前缀是什么
-  const platformSql = `SELECT id FROM images WHERE artist = ? LIMIT 10`;
+  // 2. 获取用于背景的图片 (取最新的 2 张)
+  // cover1: 用于卡片背景 (最新的一张)
+  // cover2: 用于网页大背景 (第二新的一张，如果没有则复用 cover1)
+  const coverSql = `SELECT file_name FROM images WHERE artist = ? ORDER BY created_at DESC LIMIT 2`;
+  const { results: covers } = await env.DB.prepare(coverSql).bind(artist).all();
+  
+  const cover1 = covers[0]?.file_name;
+  const cover2 = covers[1]?.file_name || cover1; // 如果只有一张图，大背景也用它
+
+  // 3. 智能分析多平台来源 (扫描最近 20 张图)
+  const platformSql = `SELECT id FROM images WHERE artist = ? LIMIT 20`;
   const { results: sampleIds } = await env.DB.prepare(platformSql).bind(artist).all();
   
-  let pixivCount = 0;
-  let yandeCount = 0;
-  let mtcCount = 0;
-
+  let platforms = new Set(); // 使用 Set 去重
+  
   sampleIds.forEach(row => {
-    if (row.id.startsWith('pixiv_')) pixivCount++;
-    else if (row.id.startsWith('yande')) yandeCount++;
-    else if (row.id.startsWith('mtcacg')) mtcCount++;
+    if (row.id.startsWith('pixiv_')) platforms.add('Pixiv');
+    else if (row.id.startsWith('yande')) platforms.add('Yande.re');
+    else if (row.id.startsWith('mtcacg')) platforms.add('MtcACG');
+    else if (row.id.startsWith('twitter')) platforms.add('Twitter');
+    else platforms.add('Other');
   });
 
-  // 判定主要平台
-  let platform = 'Unknown';
-  let platformIcon = '🎨';
-  let platformClass = 'bg-gray-500'; // 默认颜色
+  // 将 Set 转为数组并排序，然后用 "、" 连接
+  // 优先显示 Pixiv, Yande
+  const priority = ['Pixiv', 'Yande.re', 'MtcACG', 'Twitter'];
+  const sortedPlatforms = Array.from(platforms).sort((a, b) => {
+      return (priority.indexOf(a) === -1 ? 99 : priority.indexOf(a)) - 
+             (priority.indexOf(b) === -1 ? 99 : priority.indexOf(b));
+  });
+  
+  const platformText = sortedPlatforms.join('、');
 
-  if (pixivCount >= yandeCount && pixivCount >= mtcCount) {
-    platform = 'Pixiv';
-    platformIcon = '🅿️'; // P站图标
-    platformClass = 'bg-blue-500'; // P站蓝
-  } else if (yandeCount >= pixivCount && yandeCount >= mtcCount) {
-    platform = 'Yande.re';
-    platformIcon = '🍒'; // Y站红
-    platformClass = 'bg-red-500';
-  } else {
-    platform = 'MtcACG'; // 站内原创或独占
-    platformIcon = '🌟';
-    platformClass = 'bg-purple-500';
-  }
-
-  // 3. 处理 AJAX 分页请求 (保持不变)
+  // 4. AJAX 逻辑 (保持不变)
   const format = url.searchParams.get('format');
   if (format === 'json') {
     const page = parseInt(url.searchParams.get('page')) || 1;
@@ -260,10 +253,9 @@ export async function handleArtistProfile(artistName, url, env) {
     return new Response(JSON.stringify(results), { headers: { 'Content-Type': 'application/json' } });
   }
 
-  // 4. 渲染 HTML
+  // 5. 渲染 HTML
   const { htmlArtistProfile } = await import('./templates.js');
   
-  // 格式化时间
   let updateTime = '未知';
   if(meta.last_update) {
     const ts = meta.last_update.toString().length === 10 ? meta.last_update * 1000 : meta.last_update;
@@ -275,10 +267,9 @@ export async function handleArtistProfile(artistName, url, env) {
     artist,
     count: meta.count,
     updateTime,
-    cover: meta.cover,
-    platform,
-    platformIcon,
-    platformClass
+    cover1, // 卡片背景
+    cover2, // 网页大背景
+    platformText
   }), {
     headers: { 'Content-Type': 'text/html;charset=UTF-8' }
   });
