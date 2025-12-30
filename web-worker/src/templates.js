@@ -911,17 +911,60 @@ export function htmlArtists() {
   <link rel="icon" type="image/png" href="https://pub-d07d03b8c35d40309ce9c6d8216e885b.r2.dev/ACGg.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* === 基础样式 === */
     ::-webkit-scrollbar { width: 0px; background: transparent; }
     html { -ms-overflow-style: none; scrollbar-width: none; }
     body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #121212; color: #fff; overflow-x: hidden; }
     
-    /* === 背景层 === */
     #bg-layer { position: fixed; inset: 0; z-index: -1; background-size: cover; background-position: center; filter: blur(10px) brightness(0.5); opacity: 0; transition: opacity 1s; pointer-events: none; }
 
-    /* === 顶部栏 === */
-    .header { position: fixed; top: 0; left: 0; right: 0; z-index: 28; background: rgba(18, 18, 18, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
-    .logo { font-weight: 800; font-size: 18px; color: #fff; text-decoration: none; }
+    /* === 顶部栏 (更通透) === */
+    .header { 
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50; 
+      /* 背景透明度降低到 0.6，模糊度增加 */
+      background: rgba(10, 10, 10, 0.6); 
+      backdrop-filter: blur(20px); 
+      border-bottom: 1px solid rgba(255,255,255,0.08); 
+      padding: 12px 20px; 
+      display: flex; align-items: center; justify-content: space-between; 
+    }
+    .logo { font-weight: 800; font-size: 18px; color: #fff; text-decoration: none; white-space: nowrap; }
+
+    /* 搜索框容器 */
+    .search-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      margin-right: 12px;
+    }
+    .search-input {
+      width: 0;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: white;
+      outline: none;
+      transition: all 0.3s ease;
+      border-bottom: 1px solid transparent;
+      opacity: 0;
+      font-size: 14px;
+    }
+    .search-input.expanded {
+      width: 160px;
+      padding: 4px 8px;
+      border-bottom: 1px solid #ec4899;
+      opacity: 1;
+      margin-right: 8px;
+    }
+    /* 移动端搜索框稍微宽一点 */
+    @media(max-width: 640px) {
+        .search-input.expanded { width: 120px; }
+    }
+    
+    .search-btn {
+      background: none; border: none; color: #ccc; cursor: pointer; padding: 4px;
+      transition: color 0.2s;
+    }
+    .search-btn:hover { color: #fff; }
 
     /* === 瀑布流容器 === */
     .masonry-wrap { display: flex; gap: 16px; padding: 16px; align-items: flex-start; margin-top: 60px; }
@@ -929,105 +972,44 @@ export function htmlArtists() {
     .masonry-col { flex: 1; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
     @media(min-width: 768px) { .masonry-col { gap: 24px; } }
 
-    /* === 核心：友站风格卡片 === */
+    /* === 卡片样式 === */
     .artist-card {
-      background: #202020;
-      border-radius: 12px;
-      overflow: hidden;
-      position: relative;
-      transition: transform 0.2s, box-shadow 0.2s;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      display: flex;
-      flex-direction: column;
+      background: #202020; border-radius: 12px; overflow: hidden; position: relative;
+      transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      display: flex; flex-direction: column;
     }
     .artist-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.5); z-index: 10; background: #2a2a2a; }
 
-    /* 1. 封面区域：负责“看大图” */
-    .cover-area {
-      position: relative;
-      width: 100%;
-      cursor: zoom-in;
-    }
-    .placeholder {
-      width: 100%;
-      padding-bottom: calc(var(--h) / var(--w) * 100%);
-      background: #1a1a1a;
-    }
-    .card-img {
-      position: absolute; inset: 0; width: 100%; height: 100%;
-      object-fit: cover; opacity: 0; transition: opacity 0.4s;
-    }
+    .cover-area { position: relative; width: 100%; cursor: zoom-in; }
+    .placeholder { width: 100%; padding-bottom: calc(var(--h) / var(--w) * 100%); background: #1a1a1a; }
+    .card-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.4s; }
     .card-img.loaded { opacity: 1; }
     
-    /* 放大镜提示 */
     .zoom-hint {
       position: absolute; top: 10px; right: 10px;
       background: rgba(0,0,0,0.6); border-radius: 50%; width: 32px; height: 32px;
-      display: flex; align-items: center; justify-content: center;
-      opacity: 0; transition: opacity 0.2s; pointer-events: none;
+      display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; pointer-events: none;
     }
     .cover-area:hover .zoom-hint { opacity: 1; }
 
-    /* 2. 底部信息栏：负责“跳转” */
-    .info-bar {
-      padding: 12px 14px;
-      background: #202020;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      border-top: 1px solid rgba(255,255,255,0.05);
-    }
-    
-    .info-top {
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .artist-name {
-      font-weight: 700; font-size: 15px; color: #fff;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      max-width: 100%;
-    }
-    
-    .info-bottom {
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .count-badge {
-      font-size: 12px; color: #888; background: #151515;
-      padding: 4px 8px; border-radius: 6px;
-    }
+    .info-bar { padding: 12px 14px; background: #202020; display: flex; flex-direction: column; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); }
+    .info-top { display: flex; justify-content: space-between; align-items: center; }
+    .artist-name { font-weight: 700; font-size: 15px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+    .info-bottom { display: flex; justify-content: space-between; align-items: center; }
+    .count-badge { font-size: 12px; color: #888; background: #151515; padding: 4px 8px; border-radius: 6px; }
 
-    /* 绿色按钮 (友站风格) */
     .view-btn {
-      background: #4CAF50;
-      color: white;
-      font-size: 12px; font-weight: 600;
-      padding: 6px 14px;
-      border-radius: 99px;
-      text-decoration: none;
-      transition: background 0.2s;
-      display: flex; align-items: center; gap: 4px;
+      background: #4CAF50; color: white; font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 99px; text-decoration: none; transition: background 0.2s; display: flex; align-items: center; gap: 4px;
     }
     .view-btn:hover { background: #45a049; }
     .view-btn:active { transform: scale(0.95); }
 
-    /* === Lightbox (图片查看器) === */
-    #lightbox {
-      position: fixed; inset: 0; z-index: 999;
-      background: rgba(0,0,0,0.95);
-      display: none; align-items: center; justify-content: center;
-      opacity: 0; transition: opacity 0.25s;
-    }
+    /* === Lightbox === */
+    #lightbox { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.25s; }
     #lightbox.active { display: flex; opacity: 1; }
-    #lightbox img {
-      max-width: 90vw; max-height: 90vh;
-      border-radius: 4px; box-shadow: 0 0 30px rgba(0,0,0,0.5);
-      object-fit: contain;
-      transform: scale(0.95); transition: transform 0.3s;
-    }
+    #lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 4px; box-shadow: 0 0 30px rgba(0,0,0,0.5); object-fit: contain; transform: scale(0.95); transition: transform 0.3s; }
     #lightbox.active img { transform: scale(1); }
-    .lb-close {
-      position: absolute; top: 20px; right: 20px;
-      color: #fff; font-size: 30px; cursor: pointer; opacity: 0.7;
-    }
+    .lb-close { position: absolute; top: 20px; right: 20px; color: #fff; font-size: 30px; cursor: pointer; opacity: 0.7; }
     .lb-close:hover { opacity: 1; }
 
     .loading-tip { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); padding: 8px 20px; border-radius: 20px; font-size: 12px; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
@@ -1038,17 +1020,37 @@ export function htmlArtists() {
   ${SIDEBAR_HTML}
 
   <div class="header">
-    <div class="p-2 cursor-pointer" onclick="toggleSidebar()">
-      <svg width="24" height="24" fill="none" stroke="white" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    <!-- 左侧：侧边栏按钮 + 名人堂入口 (高亮) -->
+    <div class="flex items-center gap-2">
+        <div class="p-2 cursor-pointer hover:bg-white/10 rounded-full transition" onclick="toggleSidebar()">
+          <svg width="24" height="24" fill="none" stroke="white" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+        </div>
+        <!-- 当前就在名人堂，所以这里图标给个高亮色 -->
+        <a href="/artists" class="p-2 text-yellow-400 bg-white/10 rounded-full" title="画师名人堂">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+        </a>
     </div>
-    <div class="font-bold text-lg tracking-wide">ARTISTS</div>
-    <a href="/" class="logo">Home</a>
+
+    <!-- 右侧：搜索 + LOGO -->
+    <div class="flex items-center">
+        <!-- 搜索框 -->
+        <div class="search-container">
+            <input type="text" id="artist-search" class="search-input" placeholder="搜索画师..." onkeydown="handleSearch(event)">
+            <button class="search-btn" onclick="toggleSearch()">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            </button>
+        </div>
+        <a href="/" class="logo">MtcACG</a>
+    </div>
   </div>
 
   <div id="masonry" class="masonry-wrap"></div>
   
   <div id="tip" class="loading-tip">加载中...</div>
 
+  <!-- Lightbox 结构 -->
   <div id="lightbox" onclick="closeLightbox()">
     <div class="lb-close">&times;</div>
     <img id="lb-img" src="" alt="Preview">
@@ -1062,9 +1064,41 @@ export function htmlArtists() {
     let page = 1;
     let isLoading = false;
     let done = false;
+    // 默认展示全部，q 用来存搜索关键词
+    let currentQuery = ''; 
     let colHeights = [];
     let cols = [];
     let colCount = window.innerWidth < 640 ? 2 : (window.innerWidth < 1024 ? 3 : (window.innerWidth < 1400 ? 4 : 5));
+
+    // 搜索框展开/收起逻辑
+    function toggleSearch() {
+        const input = document.getElementById('artist-search');
+        const isExpanded = input.classList.contains('expanded');
+        
+        if (isExpanded && input.value.trim() !== '') {
+            // 如果已经展开且有内容，点击放大镜就执行搜索
+            doArtistSearch(input.value);
+        } else {
+            // 否则切换展开状态
+            input.classList.toggle('expanded');
+            if (!isExpanded) input.focus();
+        }
+    }
+    
+    // 回车搜索
+    function handleSearch(e) {
+        if (e.key === 'Enter') {
+            doArtistSearch(e.target.value);
+        }
+    }
+
+    // 执行搜索
+    function doArtistSearch(val) {
+        currentQuery = val.trim();
+        page = 1;
+        done = false;
+        load(true); // reset = true
+    }
 
     function initMasonry() {
       masonry.innerHTML = '';
@@ -1086,14 +1120,13 @@ export function htmlArtists() {
       }
     });
 
-    // Lightbox 逻辑
+    // Lightbox
     window.openLightbox = function(url) {
       const lb = document.getElementById('lightbox');
       const img = document.getElementById('lb-img');
       img.src = url;
       lb.style.display = 'flex';
-      void lb.offsetWidth;
-      lb.classList.add('active');
+      void lb.offsetWidth; lb.classList.add('active');
       document.body.style.overflow = 'hidden';
     };
 
@@ -1106,10 +1139,8 @@ export function htmlArtists() {
         document.body.style.overflow = 'auto';
       }, 250);
     };
-
-    document.addEventListener('keydown', (e) => {
-      if(e.key === 'Escape') closeLightbox();
-    });
+    
+    document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeLightbox(); });
 
     async function load(reset = false) {
       if (isLoading || (done && !reset)) return;
@@ -1120,18 +1151,21 @@ export function htmlArtists() {
       if (cols.length === 0) initMasonry();
 
       try {
-        const res = await fetch(\`/artists?format=json&page=\${page}\`);
+        // ✅ 这里的 API 请求加上了 q 参数，实现后端搜索
+        const url = \`/artists?format=json&page=\${page}&q=\${encodeURIComponent(currentQuery)}\`;
+        const res = await fetch(url);
         const data = await res.json();
 
         if (data.length === 0) {
           done = true;
-          tip.textContent = 'End';
+          tip.textContent = '没有更多了';
           setTimeout(() => tip.style.opacity = '0', 2000);
           isLoading = false;
           return;
         }
 
-        if (page === 1 && data.length > 0) {
+        // 只有在第一页且是【全量浏览】（没搜东西）时才换大背景，避免搜索时背景乱跳
+        if (page === 1 && currentQuery === '' && data.length > 0) {
           bgLayer.style.backgroundImage = \`url(/image/\${data[0].cover})\`;
           bgLayer.style.opacity = '1';
         }
@@ -1151,7 +1185,6 @@ export function htmlArtists() {
           
           const coverUrl = \`/image/\${item.cover}?dl=jpg\`;
           const artistLink = \`/artist/\${encodeURIComponent(item.artist)}\`;
-
 
           card.innerHTML = \`
             <div class="cover-area" onclick="openLightbox('\${coverUrl}')">
