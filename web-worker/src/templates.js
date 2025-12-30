@@ -866,6 +866,9 @@ export function htmlDetail(params) {
 
 
 
+// ==========================================
+// 2. 画师分类页 HTML (新增/替换此函数)
+// ==========================================
 export function htmlArtists() {
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -881,76 +884,125 @@ export function htmlArtists() {
     html { -ms-overflow-style: none; scrollbar-width: none; }
     body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #121212; color: #fff; overflow-x: hidden; }
     
-    /* === 背景层 (复用首页) === */
-    #bg-layer { position: fixed; inset: 0; z-index: -1; background-size: cover; background-position: center; filter: blur(8px) brightness(0.6); opacity: 0; transition: opacity 1s; pointer-events: none; }
+    /* === 背景层 === */
+    #bg-layer { position: fixed; inset: 0; z-index: -1; background-size: cover; background-position: center; filter: blur(10px) brightness(0.5); opacity: 0; transition: opacity 1s; pointer-events: none; }
 
     /* === 顶部栏 === */
-    .header { position: fixed; top: 0; left: 0; right: 0; z-index: 28; background: rgba(18, 18, 18, 0.85); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .header { position: fixed; top: 0; left: 0; right: 0; z-index: 28; background: rgba(18, 18, 18, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
     .logo { font-weight: 800; font-size: 18px; color: #fff; text-decoration: none; }
 
-    /* === 瀑布流布局 (同首页) === */
-    .masonry-wrap { display: flex; gap: 15px; padding: 15px; align-items: flex-start; margin-top: 60px; }
-    @media(min-width: 768px) { .masonry-wrap { padding: 30px; gap: 25px; max-width: 1800px; margin: 80px auto 0; } }
-    
-    .masonry-col { flex: 1; display: flex; flex-direction: column; gap: 15px; min-width: 0; }
-    @media(min-width: 768px) { .masonry-col { gap: 25px; } }
+    /* === 瀑布流容器 === */
+    .masonry-wrap { display: flex; gap: 16px; padding: 16px; align-items: flex-start; margin-top: 60px; }
+    @media(min-width: 768px) { .masonry-wrap { padding: 30px; gap: 24px; max-width: 1800px; margin: 80px auto 0; } }
+    .masonry-col { flex: 1; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+    @media(min-width: 768px) { .masonry-col { gap: 24px; } }
 
-    /* === 画师卡片 (高度自适应) === */
+    /* === 核心：友站风格卡片 === */
     .artist-card {
-      background: #252525;
+      background: #202020;
       border-radius: 12px;
       overflow: hidden;
       position: relative;
-      transition: transform 0.2s;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-      display: block; /* a 标签 */
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
     }
-    .artist-card:active { transform: scale(0.98); }
-    /* hover 时稍微上浮 */
-    .artist-card:hover { transform: translateY(-4px); z-index: 10; box-shadow: 0 12px 24px rgba(0,0,0,0.5); }
+    .artist-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.5); z-index: 10; background: #2a2a2a; }
 
-    /* 图片占位器：关键防抖动逻辑 */
+    /* 1. 封面区域：负责“看大图” */
+    .cover-area {
+      position: relative;
+      width: 100%;
+      cursor: zoom-in;
+    }
     .placeholder {
       width: 100%;
-      /* 使用 padding-bottom 实现固定比例占位 */
       padding-bottom: calc(var(--h) / var(--w) * 100%);
-      position: relative;
-      background: #202020;
+      background: #1a1a1a;
     }
-    
     .card-img {
       position: absolute; inset: 0; width: 100%; height: 100%;
-      object-fit: cover; /* 如果比例稍微有误差，cover 兜底 */
-      opacity: 0; transition: opacity 0.4s;
+      object-fit: cover; opacity: 0; transition: opacity 0.4s;
     }
     .card-img.loaded { opacity: 1; }
+    
+    /* 放大镜提示 */
+    .zoom-hint {
+      position: absolute; top: 10px; right: 10px;
+      background: rgba(0,0,0,0.6); border-radius: 50%; width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.2s; pointer-events: none;
+    }
+    .cover-area:hover .zoom-hint { opacity: 1; }
 
-    /* 底部信息栏 (半透明叠加) */
+    /* 2. 底部信息栏：负责“跳转” */
     .info-bar {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      padding: 40px 12px 12px;
-      background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 60%, transparent 100%);
-      display: flex; justify-content: space-between; align-items: flex-end;
+      padding: 12px 14px;
+      background: #202020;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    .info-top {
+      display: flex; justify-content: space-between; align-items: center;
     }
     .artist-name {
-      font-weight: 700; font-size: 14px; color: #fff;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-      max-width: 70%;
+      font-weight: 700; font-size: 15px; color: #fff;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      max-width: 100%;
+    }
+    
+    .info-bottom {
+      display: flex; justify-content: space-between; align-items: center;
     }
     .count-badge {
-      font-size: 11px; color: #ddd; background: rgba(255,255,255,0.15);
-      padding: 2px 8px; border-radius: 99px; backdrop-filter: blur(4px);
-      border: 1px solid rgba(255,255,255,0.1);
+      font-size: 12px; color: #888; background: #151515;
+      padding: 4px 8px; border-radius: 6px;
     }
+
+    /* 绿色按钮 (友站风格) */
+    .view-btn {
+      background: #4CAF50;
+      color: white;
+      font-size: 12px; font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 99px;
+      text-decoration: none;
+      transition: background 0.2s;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .view-btn:hover { background: #45a049; }
+    .view-btn:active { transform: scale(0.95); }
+
+    /* === Lightbox (图片查看器) === */
+    #lightbox {
+      position: fixed; inset: 0; z-index: 999;
+      background: rgba(0,0,0,0.95);
+      display: none; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.25s;
+    }
+    #lightbox.active { display: flex; opacity: 1; }
+    #lightbox img {
+      max-width: 90vw; max-height: 90vh;
+      border-radius: 4px; box-shadow: 0 0 30px rgba(0,0,0,0.5);
+      object-fit: contain;
+      transform: scale(0.95); transition: transform 0.3s;
+    }
+    #lightbox.active img { transform: scale(1); }
+    .lb-close {
+      position: absolute; top: 20px; right: 20px;
+      color: #fff; font-size: 30px; cursor: pointer; opacity: 0.7;
+    }
+    .lb-close:hover { opacity: 1; }
 
     .loading-tip { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); padding: 8px 20px; border-radius: 20px; font-size: 12px; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
   </style>
 </head>
 <body>
-  <!-- 背景层 -->
   <div id="bg-layer"></div>
-  
   ${SIDEBAR_HTML}
 
   <div class="header">
@@ -963,7 +1015,12 @@ export function htmlArtists() {
 
   <div id="masonry" class="masonry-wrap"></div>
   
-  <div id="tip" class="loading-tip">正在寻找更多画师...</div>
+  <div id="tip" class="loading-tip">加载中...</div>
+
+  <div id="lightbox" onclick="closeLightbox()">
+    <div class="lb-close">&times;</div>
+    <img id="lb-img" src="" alt="Preview">
+  </div>
 
   <script>
     const masonry = document.getElementById('masonry');
@@ -973,11 +1030,8 @@ export function htmlArtists() {
     let page = 1;
     let isLoading = false;
     let done = false;
-    // 记录每列当前高度，确保新卡片总是插入最短的那一列
-    let colHeights = []; 
+    let colHeights = [];
     let cols = [];
-
-    // 响应式列数
     let colCount = window.innerWidth < 640 ? 2 : (window.innerWidth < 1024 ? 3 : (window.innerWidth < 1400 ? 4 : 5));
 
     function initMasonry() {
@@ -996,10 +1050,33 @@ export function htmlArtists() {
       const newCount = window.innerWidth < 640 ? 2 : (window.innerWidth < 1024 ? 3 : (window.innerWidth < 1400 ? 4 : 5));
       if(newCount !== colCount) {
         colCount = newCount;
-        page = 1; 
-        done = false;
-        load(true);
+        page = 1; done = false; load(true);
       }
+    });
+
+    // Lightbox 逻辑
+    window.openLightbox = function(url) {
+      const lb = document.getElementById('lightbox');
+      const img = document.getElementById('lb-img');
+      img.src = url;
+      lb.style.display = 'flex';
+      void lb.offsetWidth;
+      lb.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    };
+
+    window.closeLightbox = function() {
+      const lb = document.getElementById('lightbox');
+      lb.classList.remove('active');
+      setTimeout(() => {
+        lb.style.display = 'none';
+        document.getElementById('lb-img').src = '';
+        document.body.style.overflow = 'auto';
+      }, 250);
+    };
+
+    document.addEventListener('keydown', (e) => {
+      if(e.key === 'Escape') closeLightbox();
     });
 
     async function load(reset = false) {
@@ -1016,49 +1093,57 @@ export function htmlArtists() {
 
         if (data.length === 0) {
           done = true;
-          tip.textContent = '没有更多了~';
+          tip.textContent = 'End';
           setTimeout(() => tip.style.opacity = '0', 2000);
           isLoading = false;
           return;
         }
 
-        // === 1. 设置背景图 (仅第一页第一张) ===
         if (page === 1 && data.length > 0) {
           bgLayer.style.backgroundImage = \`url(/image/\${data[0].cover})\`;
           bgLayer.style.opacity = '1';
         }
 
-        // === 2. 生成卡片 ===
         for (const item of data) {
-          // 容错：如果没有宽高，默认给个 3:4
           const w = item.width || 3;
           const h = item.height || 4;
           const aspectRatio = h / w;
           
-          // 寻找最短列
           let minIdx = 0;
           for(let i=1; i<colCount; i++) {
             if(colHeights[i] < colHeights[minIdx]) minIdx = i;
           }
 
-          const card = document.createElement('a');
-          card.href = \`/api/posts?q=\${encodeURIComponent(item.artist)}\`;
+          const card = document.createElement('div');
           card.className = 'artist-card';
           
-          // 使用 CSS 变量传递宽高给 placeholder
+          const coverUrl = \`/image/\${item.cover}?dl=jpg\`;
+          const artistLink = \`/api/posts?q=\${encodeURIComponent(item.artist)}\`;
+
           card.innerHTML = \`
-            <div class="placeholder" style="--w:\${w}; --h:\${h};">
-               <img class="card-img" src="/image/\${item.cover}?dl=jpg" loading="lazy" onload="this.classList.add('loaded')">
+            <div class="cover-area" onclick="openLightbox('\${coverUrl}')">
+               <div class="placeholder" style="--w:\${w}; --h:\${h};"></div>
+               <img class="card-img" src="\${coverUrl}" loading="lazy" onload="this.classList.add('loaded')">
+               <div class="zoom-hint">
+                 <svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16zm-1-13h2v6h-2zm0 8h2v2h-2z" fill="none"/><path fill="currentColor" d="M21 21l-4.35-4.35a7.95 7.95 0 001.35-4.65C18 7.58 14.42 4 10 4S2 7.58 2 12s3.58 8 8 8c1.77 0 3.4-.55 4.65-1.35L19 23l2-2zM10 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/></svg>
+               </div>
             </div>
+            
             <div class="info-bar">
-               <span class="artist-name">\${item.artist}</span>
-               <span class="count-badge">\${item.count}</span>
+               <div class="info-top">
+                 <div class="artist-name" title="\${item.artist}">\${item.artist}</div>
+               </div>
+               <div class="info-bottom">
+                 <div class="count-badge">\${item.count} 作品</div>
+                 <a href="\${artistLink}" class="view-btn">
+                   查看作品 <span style="font-size:14px">→</span>
+                 </a>
+               </div>
             </div>
           \`;
 
           cols[minIdx].appendChild(card);
-          // 更新列高度记录 (按比例累加)
-          colHeights[minIdx] += aspectRatio;
+          colHeights[minIdx] += (aspectRatio + 0.3);
         }
 
         page++;
@@ -1079,4 +1164,5 @@ export function htmlArtists() {
 </body>
 </html>`;
 }
+
 
