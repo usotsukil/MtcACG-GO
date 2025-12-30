@@ -1452,15 +1452,14 @@ export function htmlArtistProfile(data) {
            const titleText = (item.caption || '').split('\\n')[0];
 
            const card = document.createElement('a');
-           card.href = `/detail/${item.id}`;
+           card.href = \`/detail/\${item.id}\`;
            card.className = 'img-card';
-           // 2. 在 innerHTML 里加入 .meta 和 .title
-           card.innerHTML = `
-               <img src="/image/${item.file_name}?dl=jpg" loading="lazy" onload="this.classList.add('loaded')" style="aspect-ratio:${w}/${h}">
-               <div class="meta">
-                   <div class="title">${titleText}</div>
+           card.innerHTML = \`
+               <img src="/image/\${item.file_name}?dl=jpg" loading="lazy" onload="this.classList.add('loaded')" style="aspect-ratio:\${w}/\${h}">
+               <div class=\"meta\">
+                   <div class=\"title\">\${titleText}</div>
                </div>
-           `;
+           \`;
 
            
            cols[min].appendChild(card);
