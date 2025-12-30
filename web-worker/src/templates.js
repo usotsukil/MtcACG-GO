@@ -1169,20 +1169,28 @@ export function htmlArtists() {
 
 // templates.js
 
+// 确保在文件顶部或适当位置引入了 SIDEBAR_HTML
+// import { SIDEBAR_HTML } from './templates.js'; 
+
 export function htmlArtistProfile(data) {
   const { artist, count, updateTime, cover1, cover2, platformText } = data;
 
-  // 渲染平台徽章
+  // === 3. 动态生成平台标签的 HTML ===
+  // 我们在模板里直接处理，把 "Pixiv、Yande.re" 拆开变成漂亮的彩色徽章
   const platforms = platformText.split('、');
+  
   const renderBadge = (p) => {
     let icon = '🎨'; let colorClass = 'bg-gray-500/20 text-gray-200 border-gray-500/30';
     if (p.includes('Pixiv')) { icon = '🅿️'; colorClass = 'bg-[#0096fa]/20 text-[#0096fa] border-[#0096fa]/30'; }
     else if (p.includes('Yande')) { icon = '🍒'; colorClass = 'bg-[#ff4d4d]/20 text-[#ff4d4d] border-[#ff4d4d]/30'; }
     else if (p.includes('MtcACG')) { icon = '🌟'; colorClass = 'bg-[#a855f7]/20 text-[#a855f7] border-[#a855f7]/30'; }
     else if (p.includes('Twitter')) { icon = '🐦'; colorClass = 'bg-[#1da1f2]/20 text-[#1da1f2] border-[#1da1f2]/30'; }
+    
     return `<span class="platform-badge ${colorClass}">${icon} ${p}</span>`;
   };
+
   const badgesHtml = platforms.map(p => renderBadge(p.trim())).join('');
+
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -1192,74 +1200,114 @@ export function htmlArtistProfile(data) {
   <title>${artist} - 作品集</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* === 基础样式 === */
+    /* === 基础设置 === */
     body { background: #121212; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     ::-webkit-scrollbar { width: 0; }
     
-    /* 大背景 (亮一点)8px 0.5  */
+    /* === 优化点2：网页大背景 (调亮) === */
+    /* 之前的 brightness(0.4) 太黑了，改成 0.6，模糊度保留 */
     .page-bg {
       position: fixed; inset: 0; z-index: -2;
       background-image: url('/image/${cover2}?dl=jpg');
       background-size: cover; background-position: center;
       filter: blur(25px) brightness(0.6); 
       transform: scale(1.1);
+      transition: opacity 1s;
     }
 
-    /* 导航栏 */
+    /* === 导航栏 === */
     .nav-bar {
       position: fixed; top: 0; left: 0; right: 0; height: 60px;
-      padding: 0 16px;
+      padding: 0 16px; /* 稍微缩小内边距 */
       display: flex; justify-content: space-between; align-items: center;
-      background: rgba(0,0,0,0.3); backdrop-filter: blur(10px); z-index: 50;
+      background: rgba(0,0,0,0.3); /* 降低导航栏黑度，更通透 */
+      backdrop-filter: blur(10px); z-index: 50;
       border-bottom: 1px solid rgba(255,255,255,0.05);
     }
     .nav-left { display: flex; gap: 12px; align-items: center; }
-    .nav-center { position: absolute; left: 50%; transform: translateX(-50%); font-weight: 700; opacity: 0.9; font-size: 15px; display: none; }
+    .nav-center { 
+      position: absolute; left: 50%; transform: translateX(-50%); 
+      font-weight: 700; opacity: 0.9; font-size: 15px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      display: none; 
+    }
+    .nav-right { font-weight: 800; font-size: 18px; letter-spacing: 1px; color: #fff; text-decoration: none; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+    
     @media(min-width: 768px) { .nav-center { display: block; } }
-    .nav-right { font-weight: 800; font-size: 18px; color: #fff; text-decoration: none; }
 
-    /* 按钮居中修复 */
+    /* === 优化点1：按钮居中修复 === */
     .icon-btn { 
       width: 38px; height: 38px; 
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.05);
+      display: flex; align-items: center; justify-content: center; /* 核心居中代码 */
+      border-radius: 10px; /* 圆角稍微大一点更现代 */
+      background: rgba(255,255,255,0.1); 
+      border: 1px solid rgba(255,255,255,0.05);
       color: #eee; transition: .2s; cursor: pointer;
     }
     .icon-btn:hover { background: rgba(255,255,255,0.25); color: #fff; transform: translateY(-1px); }
-    .icon-btn svg { display: block; }
+    .icon-btn:active { transform: scale(0.95); }
+    
+    /* 强制 SVG 居中 */
+    .icon-btn svg { display: block; } 
 
-    /* 信息卡片，在这修改卡片 */ ard {
-      margin-top: 100px; position: relative; overflow: hidden;
-      border-radius: 24px; padding: 40px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.4); border: 1px solid rgba(255, 255, 255, 0.15);
+    /* === 优化点2：信息卡片 (调亮 & 玻璃感) === */
+    .profile-card {
+      margin-top: 100px;
+      position: relative; overflow: hidden;
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4); /* 阴影可以让卡片浮起来 */
+      border: 1px solid rgba(255, 255, 255, 0.15); /* 边框亮一点 */
     }
+    
+    /* 卡片背景图层 */
     .profile-card::before {
       content: ''; position: absolute; inset: 0; z-index: -1;
       background-image: url('/image/${cover1}?dl=jpg');
       background-size: cover; background-position: center;
-      filter: blur(15px) brightness(0.6) saturate(1.2); transform: scale(1.2);
+      /* 关键调整：亮度 0.7 (之前是0.5)，模糊度 50px (更柔和) */
+      filter: blur(50px) brightness(0.7) saturate(1.2); 
+      transform: scale(1.2);
     }
+    
+    /* 遮罩层 (改淡) */
     .profile-card::after {
       content: ''; position: absolute; inset: 0; z-index: -1;
+      /* 之前是 0.4，现在改成 0.2，或者用渐变 */
       background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.4));
     }
 
+    /* === 优化点3：多彩平台标签 === */
     .platform-badge {
       display: inline-flex; align-items: center; gap: 6px;
-      padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; 
-      border: 1px solid; backdrop-filter: blur(4px); transition: transform 0.2s;
+      padding: 6px 12px; border-radius: 8px; 
+      font-size: 13px; font-weight: 600; 
+      border: 1px solid; /*边框颜色由 inline style 控制*/
+      backdrop-filter: blur(4px);
+      transition: transform 0.2s;
     }
     .platform-badge:hover { transform: translateY(-2px); }
 
-    .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 30px; }
+    /* 统计数据 */
+    .stat-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 30px;
+    }
     @media(min-width: 640px) { .stat-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
-    .stat-item { background: rgba(0,0,0,0.2); border-radius: 16px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(10px); }
+
+    .stat-item {
+      background: rgba(0,0,0,0.2); /* 半透明黑底 */
+      border-radius: 16px; padding: 20px;
+      border: 1px solid rgba(255,255,255,0.05);
+      backdrop-filter: blur(10px);
+      transition: background 0.2s;
+    }
+    .stat-item:hover { background: rgba(255,255,255,0.1); }
+
     .stat-label { font-size: 12px; color: #ccc; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; font-weight: 500; }
-    .stat-value { font-size: 20px; font-weight: 700; color: #fff; }
+    .stat-value { font-size: 20px; font-weight: 700; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
 
     /* 瀑布流 */
     .masonry-wrap { display: flex; gap: 16px; margin-top: 40px; align-items: flex-start; }
-    .masonry-col { flex: 1; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+    .masonry-col { flex: 1; display: flex; flex-direction: column; gap: 16px; }
     
     .img-card {
       display: block; border-radius: 12px; overflow: hidden; background: #222;
@@ -1269,24 +1317,9 @@ export function htmlArtistProfile(data) {
     .img-card:hover { transform: translateY(-4px); z-index: 10; box-shadow: 0 12px 24px rgba(0,0,0,0.5); }
     .img-card img { width: 100%; height: auto; display: block; opacity: 0; transition: opacity 0.3s; }
     .img-card img.loaded { opacity: 1; }
-
-    .meta {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      padding: 40px 12px 12px;
-      background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-      opacity: 0; transition: opacity 0.2s; pointer-events: none;
-    }
-    .img-card:hover .meta { opacity: 1; }
-    .title {
-      font-size: 13px; font-weight: 600; color: #fff;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-    }
-    /* 移动端默认显示标题，不用悬停 */
-    @media(max-width: 768px) { .meta { opacity: 1; padding: 30px 8px 8px; } }
-    </style>
-  </head>
-    <body class="px-4 pb-20 md:px-10 lg:px-20">
+  </style>
+</head>
+<body class="px-4 pb-20 md:px-10 lg:px-20">
   
   <div class="page-bg"></div>
   
@@ -1294,30 +1327,42 @@ export function htmlArtistProfile(data) {
 
   <div class="nav-bar">
     <div class="nav-left">
+      <!-- 汉堡按钮 -->
       <div class="icon-btn" onclick="toggleSidebar()">
         <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
       </div>
+      <!-- 返回按钮 -->
       <a href="/artists" class="icon-btn" title="返回画师墙">
         <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
       </a>
     </div>
-    <div class="nav-center">画师作品展</div>
-    <a href="/" class="nav-right">MtcACG</a>
+
+    <div class="nav-center">
+      画师作品展
+    </div>
+
+    <a href="/" class="nav-right">
+      MtcACG
+    </a>
   </div>
 
-  <div class="max-w-[1800px] mx-auto"> <!-- 容器改宽一点以容纳5列 -->
-    <div class="profile-card max-w-5xl mx-auto"> <!-- 卡片保持居中 -->
+  <div class="max-w-5xl mx-auto">
+    <!-- 信息卡片 -->
+    <div class="profile-card">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
            <div class="flex flex-wrap items-center gap-4 mb-3">
              <h1 class="text-3xl md:text-5xl font-bold text-white drop-shadow-md">${artist}</h1>
            </div>
+           
+           <!-- 这里的平台标签已经完全彩色化了 -->
            <div class="flex flex-wrap gap-2 items-center">
               ${badgesHtml}
               <span class="text-gray-300 text-sm ml-2 opacity-80 border-l border-white/20 pl-3">MtcACG 收录画师</span>
            </div>
         </div>
       </div>
+
       <div class="stat-grid">
         <div class="stat-item">
           <span class="stat-label"><span class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]"></span> 收录作品</span>
@@ -1329,12 +1374,14 @@ export function htmlArtistProfile(data) {
         </div>
         <div class="stat-item">
           <span class="stat-label"><span class="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.6)]"></span> 数据来源</span>
+          <!-- 防止文字太长，只显示前两个，用 title 看全部 -->
           <span class="stat-value truncate block" title="${platformText}">${platformText}</span>
         </div>
       </div>
     </div>
 
-    <div class="mt-16 mb-8 flex items-end justify-between border-b border-white/10 pb-4 max-w-5xl mx-auto">
+    <!-- 瀑布流区域 -->
+    <div class="mt-16 mb-8 flex items-end justify-between border-b border-white/10 pb-4">
        <div class="flex items-center gap-3">
          <div class="w-1.5 h-8 bg-pink-500 rounded-full shadow-[0_0_10px_#ec4899]"></div>
          <div>
@@ -1357,20 +1404,8 @@ export function htmlArtistProfile(data) {
     const masonry = document.getElementById('masonry');
     const tip = document.getElementById('tip');
     
-    // === 核心修改：列数逻辑 ===
-    // < 768: 2列
-    // < 1024: 3列
-    // < 1400: 4列
-    // >= 1400: 5列 (大屏电脑)
-    function getColCount() {
-       const w = window.innerWidth;
-       if(w < 768) return 2;
-       if(w < 1024) return 3;
-       if(w < 1200) return 4;
-       return 5;
-    }
-
-    let colCount = getColCount();
+    // 智能列数：手机2列，平板3列，电脑4列
+    let colCount = window.innerWidth < 768 ? 2 : (window.innerWidth < 1200 ? 3 : 4);
     let cols = [];
     let colHeights = new Array(colCount).fill(0);
 
@@ -1407,23 +1442,16 @@ export function htmlArtistProfile(data) {
            const w = item.width || 300;
            const h = item.height || 400;
            const ratio = h / w;
-           // 获取标题，去掉换行符
-           const title = (item.caption || 'Untitled').split('\\n')[0];
            
+           // 贪心算法：找当前最短的那一列插入
            let min = 0;
            for(let i=1; i<colCount; i++) if(colHeights[i] < colHeights[min]) min = i;
            
            const card = document.createElement('a');
            card.href = \`/detail/\${item.id}\`;
            card.className = 'img-card';
-           
-           // === 新增：插入 .meta 层 ===
-           card.innerHTML = \`
-             <img src="/image/\${item.file_name}?dl=jpg" loading="lazy" onload="this.classList.add('loaded')" style="aspect-ratio:\${w}/\${h}">
-             <div class="meta">
-                <div class="title">\${title}</div>
-             </div>
-           \`;
+           // aspect-ratio 占位防止布局抖动
+           card.innerHTML = \`<img src="/image/\${item.file_name}?dl=jpg" loading="lazy" onload="this.classList.add('loaded')" style="aspect-ratio:\${w}/\${h}">\`;
            
            cols[min].appendChild(card);
            colHeights[min] += ratio;
@@ -1433,18 +1461,19 @@ export function htmlArtistProfile(data) {
       isLoading = false;
     }
 
+    // 触底自动加载
     window.addEventListener('scroll', () => {
       if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 800) {
         load();
       }
     });
     
-    // 监听列数变化
+    // 窗口改变大小时重新布局 (可选优化)
     let resizeTimer;
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
-        const newCount = getColCount();
+        const newCount = window.innerWidth < 768 ? 2 : (window.innerWidth < 1200 ? 3 : 4);
         if(newCount !== colCount) {
            colCount = newCount;
            page = 1; done = false;
