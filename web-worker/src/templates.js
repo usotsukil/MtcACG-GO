@@ -1168,70 +1168,82 @@ export function htmlArtists() {
 }
 
 
+// templates.js
+
 export function htmlArtistProfile(data) {
-  const { artist, count, updateTime, cover, platform, platformId, platformUrl, platformIcon } = data;
+  // 注意：这里不再接收 platformId
+  const { artist, count, updateTime, cover, platform, platformIcon, platformClass } = data;
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${artist} - 画师主页</title>
+  <title>${artist} - 作品集</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* 基础设置 */
-    body { background: #121212; color: #fff; font-family: sans-serif; }
+    body { background: #121212; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     ::-webkit-scrollbar { width: 0; }
     
-    /* 顶部背景大图 */
+    /* 大横幅背景 */
     .banner-bg {
-      position: absolute; top: 0; left: 0; width: 100%; height: 400px;
+      position: absolute; top: 0; left: 0; width: 100%; height: 50vh;
       background-image: url('/image/${cover}?dl=jpg');
       background-size: cover; background-position: center;
       mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
       -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
-      opacity: 0.4; z-index: -1;
+      opacity: 0.3; z-index: -1;
     }
 
-    /* 头部信息卡片 (玻璃拟态) */
-    .profile-header {
-      margin-top: 100px;
-      background: rgba(255, 255, 255, 0.05);
+    /* 顶部导航 */
+    .nav-bar {
+      position: fixed; top: 0; left: 0; right: 0; padding: 16px 24px;
+      display: flex; justify-content: space-between; align-items: center;
+      background: rgba(0,0,0,0.3); backdrop-filter: blur(10px); z-index: 50;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    /* 信息卡片 */
+    .profile-card {
+      margin-top: 120px;
+      background: rgba(30, 30, 30, 0.6);
       backdrop-filter: blur(20px);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 24px;
-      padding: 40px;
-      display: flex; flex-direction: column; gap: 30px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-    }
-    
-    /* 平台标签 */
-    .platform-tag {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(30, 144, 255, 0.2); color: #60a5fa;
-      padding: 4px 12px; border-radius: 99px; font-size: 13px; font-weight: 600;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
     }
 
-    /* 数据小方块 */
-    .stat-box {
-      background: rgba(255, 255, 255, 0.03);
-      border-radius: 16px; padding: 20px;
-      display: flex; flex-direction: column; gap: 5px;
-      transition: transform 0.2s;
+    /* 平台标签 */
+    .platform-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: 99px; font-size: 13px; font-weight: 600; color: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     }
-    .stat-box:hover { transform: translateY(-3px); background: rgba(255,255,255,0.06); }
-    .stat-label { color: #888; font-size: 12px; display: flex; align-items: center; gap: 6px; }
-    .stat-value { font-size: 24px; font-weight: 800; color: #fff; }
+
+    /* 数据格子 */
+    .stat-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;
+      margin-top: 25px;
+    }
+    .stat-item {
+      background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px;
+      display: flex; flex-direction: column; gap: 4px;
+      transition: background 0.2s;
+    }
+    .stat-item:hover { background: rgba(255,255,255,0.08); }
+    .stat-label { font-size: 12px; color: #aaa; }
+    .stat-value { font-size: 20px; font-weight: 700; color: #fff; }
 
     /* 瀑布流 */
-    .masonry-wrap { display: flex; gap: 20px; margin-top: 40px; align-items: flex-start; }
-    .masonry-col { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+    .masonry-wrap { display: flex; gap: 16px; margin-top: 40px; align-items: flex-start; }
+    .masonry-col { flex: 1; display: flex; flex-direction: column; gap: 16px; }
     
     .img-card {
-      border-radius: 12px; overflow: hidden; background: #202020;
+      display: block; border-radius: 10px; overflow: hidden; background: #222;
       position: relative; transition: transform 0.2s;
     }
-    .img-card:hover { transform: scale(1.02); z-index: 10; }
+    .img-card:hover { transform: translateY(-4px); z-index: 10; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
     .img-card img { width: 100%; height: auto; display: block; opacity: 0; transition: opacity 0.3s; }
     .img-card img.loaded { opacity: 1; }
   </style>
@@ -1240,60 +1252,52 @@ export function htmlArtistProfile(data) {
   
   <div class="banner-bg"></div>
 
-  <!-- 导航栏 (简易) -->
-  <div class="fixed top-0 left-0 right-0 p-4 flex justify-between items-center z-50 bg-black/20 backdrop-blur-md">
-    <a href="/" class="text-white font-bold text-lg">MtcACG</a>
-    <a href="/artists" class="text-gray-300 text-sm hover:text-white">← 返回画师列表</a>
+  <div class="nav-bar">
+    <a href="/" class="text-xl font-bold tracking-tight">MtcACG</a>
+    <a href="/artists" class="text-sm text-gray-300 hover:text-white transition">← 返回画师墙</a>
   </div>
 
-  <div class="max-w-6xl mx-auto">
-    <!-- 顶部信息卡 -->
-    <div class="profile-header">
-      <div class="flex items-start justify-between flex-wrap gap-4">
+  <div class="max-w-5xl mx-auto">
+    <!-- 信息卡片 -->
+    <div class="profile-card">
+      <div class="flex items-start justify-between">
         <div>
-          <div class="flex items-center gap-3 mb-2">
-            <h1 class="text-4xl font-bold text-white">${artist}</h1>
-            <span class="platform-tag">${platformIcon} ${platform} 画师</span>
+          <div class="flex items-center gap-4">
+             <h1 class="text-3xl md:text-4xl font-bold">${artist}</h1>
+             <!-- 动态颜色标签 -->
+             <span class="platform-badge ${platformClass}">
+                ${platformIcon} ${platform}
+             </span>
           </div>
-          <p class="text-gray-400 text-sm">收录更新于：${updateTime}</p>
+          <p class="text-gray-400 mt-2 text-sm">MtcACG 收录画师</p>
         </div>
-        
-        ${platformUrl ? `
-        <a href="${platformUrl}" target="_blank" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-full font-bold transition flex items-center gap-2">
-          在 ${platform} 上查看 ↗
-        </a>` : ''}
       </div>
 
-      <!-- 数据统计栏 -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="stat-box">
-          <span class="stat-label">🖼️ 作品数量</span>
-          <span class="stat-value">${count}</span>
+      <!-- 统计数据 (只展示这三项) -->
+      <div class="stat-grid">
+        <div class="stat-item">
+          <span class="stat-label">🖼️ 收录作品</span>
+          <span class="stat-value">${count} 张</span>
         </div>
-        <div class="stat-box">
-          <span class="stat-label">🆔 平台参考ID</span>
-          <span class="stat-value text-lg truncate" title="${platformId}">${platformId || '未知'}</span>
-        </div>
-        <div class="stat-box">
+        <div class="stat-item">
           <span class="stat-label">📅 最近更新</span>
-          <span class="stat-value text-lg">${updateTime}</span>
+          <span class="stat-value">${updateTime}</span>
         </div>
-        <div class="stat-box">
-          <span class="stat-label">📦 数据来源</span>
-          <span class="stat-value text-lg">MtcDB</span>
+        <div class="stat-item">
+          <span class="stat-label">📦 来源平台</span>
+          <span class="stat-value">${platform}</span>
         </div>
       </div>
     </div>
 
-    <!-- 瀑布流作品集 -->
+    <!-- 瀑布流区域 -->
     <div class="mt-12 mb-6 flex items-center gap-3">
-      <div class="w-1 h-6 bg-pink-500 rounded-full"></div>
-      <h2 class="text-2xl font-bold">作品集</h2>
-      <span class="text-gray-500 text-sm mt-1">Gallery</span>
+       <span class="text-2xl font-bold">作品一览</span>
+       <span class="text-gray-600 text-sm font-mono">${count} ITEMS</span>
     </div>
 
     <div id="masonry" class="masonry-wrap"></div>
-    <div id="tip" class="text-center py-10 text-gray-500">正在加载画师的作品...</div>
+    <div id="tip" class="text-center py-10 text-gray-500 text-sm">加载中...</div>
   </div>
 
   <script>
@@ -1304,7 +1308,7 @@ export function htmlArtistProfile(data) {
     const masonry = document.getElementById('masonry');
     const tip = document.getElementById('tip');
     
-    // 瀑布流列数逻辑
+    // 瀑布流列数
     let colCount = window.innerWidth < 768 ? 2 : (window.innerWidth < 1200 ? 3 : 4);
     let cols = [];
     let colHeights = new Array(colCount).fill(0);
@@ -1332,7 +1336,7 @@ export function htmlArtistProfile(data) {
         
         if(data.length === 0) {
           done = true;
-          tip.textContent = '没有更多作品了';
+          tip.textContent = '没有更多了';
           return;
         }
 
@@ -1341,13 +1345,14 @@ export function htmlArtistProfile(data) {
            const h = item.height || 400;
            const ratio = h / w;
            
-           // 找最短列
+           // 找最短列插入
            let min = 0;
            for(let i=1; i<colCount; i++) if(colHeights[i] < colHeights[min]) min = i;
            
            const card = document.createElement('a');
-           card.href = \`/detail/\${item.id}\`; // 点击跳详情页
+           card.href = \`/detail/\${item.id}\`;
            card.className = 'img-card';
+           // 使用 aspect-ratio 占位防止跳动
            card.innerHTML = \`<img src="/image/\${item.file_name}?dl=jpg" loading="lazy" onload="this.classList.add('loaded')" style="aspect-ratio:\${w}/\${h}">\`;
            
            cols[min].appendChild(card);
