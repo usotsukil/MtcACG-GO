@@ -864,4 +864,191 @@ export function htmlDetail(params) {
 </html>`;
 }
 
+// templates.js - 添加到文件末尾
+
+export function htmlArtists(artists, currentPage) {
+  // 1. 如果没有数据，显示提示
+  if (!artists || artists.length === 0) {
+    return `<div style="text-align:center;padding:50px;color:#888;">没有更多数据了...</div>`;
+  }
+
+  // 2. 生成卡片 HTML
+  // 注意：onclick="openLightbox(...)" 用于触发预览
+  const cardsHtml = artists.map(a => `
+    <div class="waterfall-item">
+      <div class="card-content">
+        <!-- 封面图部分：点击触发灯箱 -->
+        <div class="img-wrapper" onclick="openLightbox('/image/${a.cover}?dl=jpg')">
+          <img src="/image/${a.cover}?dl=jpg" loading="lazy" alt="Cover">
+          <div class="zoom-hint">🔍</div>
+        </div>
+        
+        <!-- 信息栏部分：固定高度 -->
+        <div class="info-bar">
+          <div class="artist-name">${a.artist}</div>
+          <div class="meta-row">
+            <span class="count-badge">${a.count} 作品</span>
+            <!-- 点击按钮：真正跳转 -->
+            <a href="/api/posts?q=${encodeURIComponent(a.artist)}" class="view-btn">
+              查看作品 →
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // 3. 返回完整页面
+  return `<!DOCTYPE html>
+  <html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>画师名人堂 - MtcACG</title>
+    <style>
+      /* === 全局基础 === */
+      body { margin: 0; background: #121212; color: #e0e0e0; font-family: sans-serif; overflow-y: scroll; }
+      a { text-decoration: none; color: inherit; }
+
+      /* === 导航栏 === */
+      .nav { padding: 15px 20px; background: #1a1a1a; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+      .nav h1 { margin: 0; font-size: 1.2rem; color: #4CAF50; }
+      .nav a { color: #aaa; font-size: 0.9rem; }
+
+      /* === 瀑布流容器 (CSS Columns) === */
+      .waterfall-container {
+        column-count: 2; /* 默认手机两列 */
+        column-gap: 15px;
+        padding: 15px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+      /* 平板 3 列，桌面 4-5 列 */
+      @media (min-width: 768px) { .waterfall-container { column-count: 3; } }
+      @media (min-width: 1024px) { .waterfall-container { column-count: 4; } }
+      @media (min-width: 1400px) { .waterfall-container { column-count: 5; } }
+
+      /* === 单个卡片 === */
+      .waterfall-item {
+        break-inside: avoid; /* 防止卡片被切断 */
+        margin-bottom: 15px; /* 卡片上下间距 */
+      }
+      
+      .card-content {
+        background: #1e1e1e;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        transition: transform 0.2s;
+      }
+      .card-content:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.5); }
+
+      /* === 图片区域 (高度自适应) === */
+      .img-wrapper {
+        position: relative;
+        cursor: zoom-in; /* 鼠标变成放大镜 */
+        font-size: 0; /* 消除图片底部空隙 */
+      }
+      .img-wrapper img {
+        width: 100%;
+        height: auto; /* 关键：高度随图片比例走 */
+        display: block;
+      }
+      /* 鼠标悬停显示放大提示 */
+      .zoom-hint {
+        position: absolute; top: 10px; right: 10px;
+        background: rgba(0,0,0,0.6); padding: 5px; border-radius: 50%;
+        opacity: 0; transition: opacity 0.2s; pointer-events: none;
+      }
+      .img-wrapper:hover .zoom-hint { opacity: 1; }
+
+      /* === 底部信息栏 (固定结构) === */
+      .info-bar { padding: 12px; background: #252525; }
+      .artist-name {
+        font-weight: bold; font-size: 0.95rem; margin-bottom: 8px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .meta-row {
+        display: flex; justify-content: space-between; align-items: center;
+      }
+      .count-badge { font-size: 0.8rem; color: #888; background: #1a1a1a; padding: 2px 6px; border-radius: 4px; }
+      
+      .view-btn {
+        font-size: 0.8rem; background: #4CAF50; color: white;
+        padding: 4px 10px; border-radius: 15px; transition: background 0.2s;
+      }
+      .view-btn:hover { background: #45a049; }
+
+      /* === 简易 Lightbox 样式 === */
+      #lightbox {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.9); z-index: 999;
+        display: none; align-items: center; justify-content: center;
+        opacity: 0; transition: opacity 0.3s;
+      }
+      #lightbox.active { display: flex; opacity: 1; }
+      #lightbox img {
+        max-width: 95%; max-height: 95%;
+        border-radius: 4px; box-shadow: 0 0 20px rgba(0,0,0,0.8);
+      }
+      
+      /* === 翻页按钮 === */
+      .pagination { text-align: center; padding: 30px; }
+      .next-page-btn {
+        display: inline-block; padding: 10px 40px; background: #333; color: #fff;
+        border-radius: 25px; border: 1px solid #444;
+      }
+      .next-page-btn:hover { background: #444; }
+    </style>
+  </head>
+  <body>
+
+    <!-- 导航 -->
+    <div class="nav">
+      <a href="/">← 首页</a>
+      <h1>画师分类</h1>
+      <a href="/api/posts?q=random">🎲 随机</a>
+    </div>
+
+    <!-- 瀑布流主容器 -->
+    <div class="waterfall-container">
+      ${cardsHtml}
+    </div>
+
+    <!-- 翻页 -->
+    <div class="pagination">
+      <a href="/artists?page=${currentPage + 1}" class="next-page-btn">加载更多 (第 ${currentPage + 1} 页)</a>
+    </div>
+
+    <!-- Lightbox (预览层) -->
+    <div id="lightbox" onclick="closeLightbox()">
+      <img id="lightbox-img" src="" alt="Preview">
+    </div>
+
+    <script>
+      // 打开灯箱
+      function openLightbox(url) {
+        const lb = document.getElementById('lightbox');
+        const img = document.getElementById('lightbox-img');
+        img.src = url;
+        lb.classList.add('active');
+        document.body.style.overflow = 'hidden'; // 禁止背景滚动
+      }
+
+      // 关闭灯箱
+      function closeLightbox() {
+        const lb = document.getElementById('lightbox');
+        lb.classList.remove('active');
+        document.body.style.overflow = 'auto'; // 恢复滚动
+        setTimeout(() => document.getElementById('lightbox-img').src = '', 300); // 清理资源
+      }
+
+      // 按 ESC 关闭
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeLightbox();
+      });
+    </script>
+  </body>
+  </html>`;
+}
 
