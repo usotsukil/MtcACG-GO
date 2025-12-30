@@ -1196,12 +1196,12 @@ export function htmlArtistProfile(data) {
     body { background: #121212; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     ::-webkit-scrollbar { width: 0; }
     
-    /* 大背景 (亮一点) */
+    /* 大背景 (亮一点)8px 0.5  */
     .page-bg {
       position: fixed; inset: 0; z-index: -2;
       background-image: url('/image/${cover2}?dl=jpg');
       background-size: cover; background-position: center;
-      filter: blur(25px) brightness(0.6); 
+      filter: blur(8px) brightness(0.5); 
       transform: scale(1.1);
     }
 
@@ -1228,8 +1228,7 @@ export function htmlArtistProfile(data) {
     .icon-btn:hover { background: rgba(255,255,255,0.25); color: #fff; transform: translateY(-1px); }
     .icon-btn svg { display: block; }
 
-    /* 信息卡片 */
-    .profile-card {
+    /* 信息卡片，在这修改卡片 */ ard {
       margin-top: 100px; position: relative; overflow: hidden;
       border-radius: 24px; padding: 40px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.4); border: 1px solid rgba(255, 255, 255, 0.15);
