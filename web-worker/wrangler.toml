@@ -5,5 +5,5 @@ compatibility_date = "2024-01-01"
 # ⚠️ 注意：填入你的数据库绑定信息 (和原来 worker 里的配置一样)
 [[d1_databases]]
 binding = "DB"  #这个不能改，写死
-database_name = "你的数据库名"   # 随意即可
-database_id = "你的数据库ID"  #例：5a6xxxf53-3xxx-470c-b8d4-dxxxxxxaf30e
+database_name = "mtcacg-plus"   # 随意即可
+database_id = "d002f773-57e1-48cb-be7b-e4f33910215d"  #例：5a6xxxf53-3xxx-470c-b8d4-dxxxxxxaf30e
