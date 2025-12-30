@@ -1238,7 +1238,7 @@ export function htmlArtistProfile(data) {
       content: ''; position: absolute; inset: 0; z-index: -1;
       background-image: url('/image/${cover1}?dl=jpg');
       background-size: cover; background-position: center;
-      filter: blur(50px) brightness(0.7) saturate(1.2); transform: scale(1.2);
+      filter: blur(15px) brightness(0.6) saturate(1.2); transform: scale(1.2);
     }
     .profile-card::after {
       content: ''; position: absolute; inset: 0; z-index: -1;
@@ -1271,7 +1271,6 @@ export function htmlArtistProfile(data) {
     .img-card img { width: 100%; height: auto; display: block; opacity: 0; transition: opacity 0.3s; }
     .img-card img.loaded { opacity: 1; }
 
-    /* === 新增：悬停显示标题 === */
     .meta {
       position: absolute; bottom: 0; left: 0; right: 0;
       padding: 40px 12px 12px;
@@ -1286,9 +1285,9 @@ export function htmlArtistProfile(data) {
     }
     /* 移动端默认显示标题，不用悬停 */
     @media(max-width: 768px) { .meta { opacity: 1; padding: 30px 8px 8px; } }
-  </style>
-</head>
-<body class="px-4 pb-20 md:px-10 lg:px-20">
+    </style>
+  </head>
+    <body class="px-4 pb-20 md:px-10 lg:px-20">
   
   <div class="page-bg"></div>
   
@@ -1368,7 +1367,7 @@ export function htmlArtistProfile(data) {
        const w = window.innerWidth;
        if(w < 768) return 2;
        if(w < 1024) return 3;
-       if(w < 1400) return 4;
+       if(w < 1200) return 4;
        return 5;
     }
 
