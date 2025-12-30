@@ -196,19 +196,16 @@ export async function handleArtists(url, env) {
   });
 }
 
-// === 5. 画师个人主页 (新) ===
+// === 5. 画师个人主页 (修正版) ===
 export async function handleArtistProfile(artistName, url, env) {
-  // 解码画师名 (比如 %E7%94%BB%E5%B8%88 -> 画师)
   const artist = decodeURIComponent(artistName);
-  
-  // 1. 获取该画师的“统计信息”和“最新一张图(做背景)”
-  // 我们用 created_at 排序取第一条，顺便计算总数
+
+  // 1. 获取基础信息：总数、最近更新时间、最新的一张图作为背景
   const metaSql = `
     SELECT 
       COUNT(*) as count, 
       MAX(created_at) as last_update, 
-      MAX(file_name) as cover,
-      MAX(id) as sample_id  -- 用来分析平台来源
+      MAX(file_name) as cover
     FROM images 
     WHERE artist = ?
   `;
@@ -218,57 +215,55 @@ export async function handleArtistProfile(artistName, url, env) {
     return new Response("Artist not found", { status: 404 });
   }
 
-  // 2. 分析平台来源 (从 ID 结构提取)
-  // 假设 ID 格式如: pixiv_12345_p0, yande_12345, mtcacg_12345
-  let platform = 'Unknown';
-  let platformId = 'N/A';
-  let platformIcon = '🎨'; // 默认图标
-  let platformUrl = '';
+  // 2. 智能分析平台来源
+  // 我们查该画师最近的 10 张图，看它们的 ID 前缀是什么
+  const platformSql = `SELECT id FROM images WHERE artist = ? LIMIT 10`;
+  const { results: sampleIds } = await env.DB.prepare(platformSql).bind(artist).all();
+  
+  let pixivCount = 0;
+  let yandeCount = 0;
+  let mtcCount = 0;
 
-  const id = meta.sample_id || '';
-  if (id.startsWith('pixiv_')) {
+  sampleIds.forEach(row => {
+    if (row.id.startsWith('pixiv_')) pixivCount++;
+    else if (row.id.startsWith('yande')) yandeCount++;
+    else if (row.id.startsWith('mtcacg')) mtcCount++;
+  });
+
+  // 判定主要平台
+  let platform = 'Unknown';
+  let platformIcon = '🎨';
+  let platformClass = 'bg-gray-500'; // 默认颜色
+
+  if (pixivCount >= yandeCount && pixivCount >= mtcCount) {
     platform = 'Pixiv';
-    platformIcon = '🅿️'; // 或者用 SVG
-    const m = id.match(/pixiv_(\d+)/);
-    if(m) {
-      platformId = m[1];
-      platformUrl = `https://www.pixiv.net/users/${platformId}`; // 注意：这里通常是作品ID，如果是画师ID需要你数据库里有单独存，或者只能跳作品
-    }
-  } else if (id.startsWith('yande')) {
+    platformIcon = '🅿️'; // P站图标
+    platformClass = 'bg-blue-500'; // P站蓝
+  } else if (yandeCount >= pixivCount && yandeCount >= mtcCount) {
     platform = 'Yande.re';
-    platformIcon = '🍒';
-    platformUrl = 'https://yande.re/post';
-  } else if (id.startsWith('twitter')) {
-    platform = 'Twitter';
-    platformIcon = '🐦';
+    platformIcon = '🍒'; // Y站红
+    platformClass = 'bg-red-500';
   } else {
-    platform = 'Original / Other';
+    platform = 'MtcACG'; // 站内原创或独占
+    platformIcon = '🌟';
+    platformClass = 'bg-purple-500';
   }
 
-  // 3. 处理分页作品数据 (为了瀑布流)
-  // 如果是 AJAX 请求 (format=json)，只返回作品列表
+  // 3. 处理 AJAX 分页请求 (保持不变)
   const format = url.searchParams.get('format');
   if (format === 'json') {
     const page = parseInt(url.searchParams.get('page')) || 1;
     const pageSize = 20;
     const offset = (page - 1) * pageSize;
-    
-    const postsSql = `
-      SELECT * FROM images 
-      WHERE artist = ? 
-      ORDER BY created_at DESC 
-      LIMIT ? OFFSET ?
-    `;
+    const postsSql = `SELECT * FROM images WHERE artist = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`;
     const { results } = await env.DB.prepare(postsSql).bind(artist, pageSize, offset).all();
-    return new Response(JSON.stringify(results), {
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return new Response(JSON.stringify(results), { headers: { 'Content-Type': 'application/json' } });
   }
 
-  // 4. 返回完整 HTML 页面
+  // 4. 渲染 HTML
   const { htmlArtistProfile } = await import('./templates.js');
   
-  // 格式化时间 (created_at 可能是秒级时间戳)
+  // 格式化时间
   let updateTime = '未知';
   if(meta.last_update) {
     const ts = meta.last_update.toString().length === 10 ? meta.last_update * 1000 : meta.last_update;
@@ -282,9 +277,8 @@ export async function handleArtistProfile(artistName, url, env) {
     updateTime,
     cover: meta.cover,
     platform,
-    platformId,
-    platformUrl,
-    platformIcon
+    platformIcon,
+    platformClass
   }), {
     headers: { 'Content-Type': 'text/html;charset=UTF-8' }
   });
