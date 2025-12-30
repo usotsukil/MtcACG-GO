@@ -1118,7 +1118,6 @@ export function htmlArtists() {
           card.className = 'artist-card';
           
           const coverUrl = \`/image/\${item.cover}?dl=jpg\`;
-             // 改成新的专属页面
           const artistLink = `/artist/${encodeURIComponent(item.artist)}`;
 
 
@@ -1185,7 +1184,6 @@ export function htmlArtistProfile(data) {
     body { background: #121212; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     ::-webkit-scrollbar { width: 0; }
     
-    /* 大横幅背景 */
     .banner-bg {
       position: absolute; top: 0; left: 0; width: 100%; height: 50vh;
       background-image: url('/image/${cover}?dl=jpg');
@@ -1195,7 +1193,6 @@ export function htmlArtistProfile(data) {
       opacity: 0.3; z-index: -1;
     }
 
-    /* 顶部导航 */
     .nav-bar {
       position: fixed; top: 0; left: 0; right: 0; padding: 16px 24px;
       display: flex; justify-content: space-between; align-items: center;
@@ -1203,7 +1200,6 @@ export function htmlArtistProfile(data) {
       border-bottom: 1px solid rgba(255,255,255,0.05);
     }
 
-    /* 信息卡片 */
     .profile-card {
       margin-top: 120px;
       background: rgba(30, 30, 30, 0.6);
@@ -1214,14 +1210,12 @@ export function htmlArtistProfile(data) {
       box-shadow: 0 20px 40px rgba(0,0,0,0.4);
     }
 
-    /* 平台标签 */
     .platform-badge {
       display: inline-flex; align-items: center; gap: 6px;
       padding: 4px 12px; border-radius: 99px; font-size: 13px; font-weight: 600; color: white;
       box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     }
 
-    /* 数据格子 */
     .stat-grid {
       display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;
       margin-top: 25px;
@@ -1235,7 +1229,6 @@ export function htmlArtistProfile(data) {
     .stat-label { font-size: 12px; color: #aaa; }
     .stat-value { font-size: 20px; font-weight: 700; color: #fff; }
 
-    /* 瀑布流 */
     .masonry-wrap { display: flex; gap: 16px; margin-top: 40px; align-items: flex-start; }
     .masonry-col { flex: 1; display: flex; flex-direction: column; gap: 16px; }
     
@@ -1273,7 +1266,6 @@ export function htmlArtistProfile(data) {
         </div>
       </div>
 
-      <!-- 统计数据 (只展示这三项) -->
       <div class="stat-grid">
         <div class="stat-item">
           <span class="stat-label">🖼️ 收录作品</span>
@@ -1290,7 +1282,6 @@ export function htmlArtistProfile(data) {
       </div>
     </div>
 
-    <!-- 瀑布流区域 -->
     <div class="mt-12 mb-6 flex items-center gap-3">
        <span class="text-2xl font-bold">作品一览</span>
        <span class="text-gray-600 text-sm font-mono">${count} ITEMS</span>
@@ -1307,8 +1298,8 @@ export function htmlArtistProfile(data) {
     let isLoading = false;
     const masonry = document.getElementById('masonry');
     const tip = document.getElementById('tip');
+
     
-    // 瀑布流列数
     let colCount = window.innerWidth < 768 ? 2 : (window.innerWidth < 1200 ? 3 : 4);
     let cols = [];
     let colHeights = new Array(colCount).fill(0);
@@ -1345,14 +1336,12 @@ export function htmlArtistProfile(data) {
            const h = item.height || 400;
            const ratio = h / w;
            
-           // 找最短列插入
            let min = 0;
            for(let i=1; i<colCount; i++) if(colHeights[i] < colHeights[min]) min = i;
            
            const card = document.createElement('a');
            card.href = \`/detail/\${item.id}\`;
            card.className = 'img-card';
-           // 使用 aspect-ratio 占位防止跳动
            card.innerHTML = \`<img src="/image/\${item.file_name}?dl=jpg" loading="lazy" onload="this.classList.add('loaded')" style="aspect-ratio:\${w}/\${h}">\`;
            
            cols[min].appendChild(card);
