@@ -1118,7 +1118,7 @@ export function htmlArtists() {
           card.className = 'artist-card';
           
           const coverUrl = \`/image/\${item.cover}?dl=jpg\`;
-          const artistLink = `/artist/${encodeURIComponent(item.artist)}`;
+          const artistLink = \`/artist/\${encodeURIComponent(item.artist)}\`;
 
 
           card.innerHTML = \`
