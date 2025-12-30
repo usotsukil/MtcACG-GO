@@ -162,22 +162,43 @@ export async function handleArtists(url, env) {
   // API 模式：返回 JSON 数据供瀑布流加载
   if (format === 'json') {
     const page = parseInt(url.searchParams.get('page')) || 1;
+    const q = url.searchParams.get('q') || '';
     const pageSize = 50;
     const offset = (page - 1) * pageSize;
 
-    // 子查询：先按 ID 倒序找出每个画师最新的图，再聚合统计
-    // 这样能确保取到的 width/height/cover 都是最新那张图的
-    const sql = `
-      SELECT t.artist, COUNT(*) as count, t.file_name as cover, t.width, t.height
-      FROM (
-          SELECT * FROM images 
+    // ✅ 修改：根据是否有搜索词，决定 SQL 和参数
+    let sql;
+    let params;
+    
+    if (q.trim()) {
+      // 有搜索词：模糊匹配画师名
+      sql = `
+        SELECT t.artist, COUNT(*) as count, t.file_name as cover, t.width, t.height
+        FROM (
+          SELECT * FROM images
+          WHERE artist IS NOT NULL AND artist != '' AND artist LIKE ?
+          ORDER BY id DESC
+        ) t
+        GROUP BY t.artist
+        ORDER BY count DESC
+        LIMIT ? OFFSET ?
+      `;
+      params = [`%${q.trim()}%`, pageSize, offset];
+    } else {
+      // 没有搜索词：显示全部画师
+      sql = `
+        SELECT t.artist, COUNT(*) as count, t.file_name as cover, t.width, t.height
+        FROM (
+          SELECT * FROM images
           WHERE artist IS NOT NULL AND artist != ''
           ORDER BY id DESC
-      ) t
-      GROUP BY t.artist
-      ORDER BY count DESC
-      LIMIT ? OFFSET ?
-    `;
+        ) t
+        GROUP BY t.artist
+        ORDER BY count DESC
+        LIMIT ? OFFSET ?
+      `;
+      params = [pageSize, offset];
+    }
 
     try {
       const { results } = await env.DB.prepare(sql).bind(pageSize, offset).all();
