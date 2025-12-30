@@ -1,5 +1,6 @@
 import { htmlHome, htmlAbout } from './templates.js';
 import { proxyTelegramImage, handleDetail, handleApiPosts, handleBgRandom } from './logic.js';
+import { handleArtists } from './logic.js';
 
 export default {
   async fetch(request, env, ctx) {
@@ -63,6 +64,11 @@ export default {
       return new Response(htmlHome(), { 
         headers: { 'Content-Type': 'text/html;charset=UTF-8', 'Cache-Control': 'public, max-age=60'}
       });
+    }
+
+    // 添加路由
+    if (path === '/artists') {
+      return await handleArtists(url, env);
     }
 
     // 7. 默认兜底
