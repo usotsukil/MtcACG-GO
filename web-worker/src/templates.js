@@ -1317,6 +1317,22 @@ export function htmlArtistProfile(data) {
     .img-card:hover { transform: translateY(-4px); z-index: 10; box-shadow: 0 12px 24px rgba(0,0,0,0.5); }
     .img-card img { width: 100%; height: auto; display: block; opacity: 0; transition: opacity 0.3s; }
     .img-card img.loaded { opacity: 1; }
+    .meta { 
+      position: absolute; bottom: 0; left: 0; right: 0; 
+      padding: 60px 12px 12px; /* 顶部留足空间给渐变 */
+      background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 50%, transparent 100%);
+      opacity: 0; transition: opacity 0.3s ease; 
+      pointer-events: none; z-index: 10;
+    }
+    .img-card:hover .meta { opacity: 1; }
+    
+    .title { 
+      font-size: 13px; font-weight: 600; color: #fff; 
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      transform: translateY(10px); transition: transform 0.3s ease;
+    }
+    .img-card:hover .title { transform: translateY(0); }
   </style>
 </head>
 <body class="px-4 pb-20 md:px-10 lg:px-20">
