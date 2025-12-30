@@ -866,8 +866,6 @@ export function htmlDetail(params) {
 
 
 
-import { SIDEBAR_HTML } from './templates.js';
-
 export function htmlArtists() {
   return `<!DOCTYPE html>
 <html lang="zh-CN">
