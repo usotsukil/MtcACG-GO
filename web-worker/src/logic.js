@@ -197,10 +197,12 @@ export async function handleArtists(url, env) {
 }
 
 
+// logic.js
+
 export async function handleArtistProfile(artistName, url, env) {
   const artist = decodeURIComponent(artistName);
 
-  // 1. 基础统计
+  // 1. 获取基础统计
   const metaSql = `SELECT COUNT(*) as count, MAX(created_at) as last_update FROM images WHERE artist = ?`;
   const meta = await env.DB.prepare(metaSql).bind(artist).first();
 
@@ -208,51 +210,40 @@ export async function handleArtistProfile(artistName, url, env) {
     return new Response("Artist not found", { status: 404 });
   }
 
-  // 2. 背景图 (取最新两张)
+  // 2. 获取用于背景的图片 (取最新的 2 张)
+  // cover1: 用于卡片背景 (最新的一张)
+  // cover2: 用于网页大背景 (第二新的一张，如果没有则复用 cover1)
   const coverSql = `SELECT file_name FROM images WHERE artist = ? ORDER BY created_at DESC LIMIT 2`;
   const { results: covers } = await env.DB.prepare(coverSql).bind(artist).all();
+  
   const cover1 = covers[0]?.file_name;
-  const cover2 = covers[1]?.file_name || cover1; 
+  const cover2 = covers[1]?.file_name || cover1; // 如果只有一张图，大背景也用它
 
-  // 3. 智能平台分析 (带颜色图标)
-  const platformSql = `SELECT id FROM images WHERE artist = ? LIMIT 50`; // 查多一点样本更准
+  // 3. 智能分析多平台来源 (扫描最近 20 张图)
+  const platformSql = `SELECT id FROM images WHERE artist = ? LIMIT 20`;
   const { results: sampleIds } = await env.DB.prepare(platformSql).bind(artist).all();
   
-  // 统计各平台数量
-  let counts = { pixiv: 0, yande: 0, mtc: 0, twitter: 0 };
+  let platforms = new Set(); // 使用 Set 去重
+  
   sampleIds.forEach(row => {
-    if (row.id.startsWith('pixiv_')) counts.pixiv++;
-    else if (row.id.startsWith('yande')) counts.yande++;
-    else if (row.id.startsWith('mtcacg')) counts.mtc++;
-    else if (row.id.startsWith('twitter')) counts.twitter++;
+    if (row.id.startsWith('pixiv_')) platforms.add('Pixiv');
+    else if (row.id.startsWith('yande')) platforms.add('Yande.re');
+    else if (row.id.startsWith('mtcacg')) platforms.add('MtcACG');
+    else if (row.id.startsWith('twitter')) platforms.add('Twitter');
+    else platforms.add('Other');
   });
 
-  // 生成 HTML 徽章数组
-  let badges = [];
+  // 将 Set 转为数组并排序，然后用 "、" 连接
+  // 优先显示 Pixiv, Yande
+  const priority = ['Pixiv', 'Yande.re', 'MtcACG', 'Twitter'];
+  const sortedPlatforms = Array.from(platforms).sort((a, b) => {
+      return (priority.indexOf(a) === -1 ? 99 : priority.indexOf(a)) - 
+             (priority.indexOf(b) === -1 ? 99 : priority.indexOf(b));
+  });
   
-  // Pixiv (蓝色)
-  if (counts.pixiv > 0) {
-    badges.push(`<span class="platform-badge bg-blue-500/20 text-blue-300 border-blue-500/30">🅿️ Pixiv</span>`);
-  }
-  // Yande.re (红色)
-  if (counts.yande > 0) {
-    badges.push(`<span class="platform-badge bg-red-500/20 text-red-300 border-red-500/30">🍒 Yande.re</span>`);
-  }
-  // Twitter (天蓝)
-  if (counts.twitter > 0) {
-    badges.push(`<span class="platform-badge bg-sky-500/20 text-sky-300 border-sky-500/30">🐦 Twitter</span>`);
-  }
-  // MtcACG (紫色 - 如果是独占或者没别的平台)
-  if (counts.mtc > 0 || badges.length === 0) {
-    badges.push(`<span class="platform-badge bg-purple-500/20 text-purple-300 border-purple-500/30">🌟 MtcACG</span>`);
-  }
+  const platformText = sortedPlatforms.join('、');
 
-  // 拼成一个字符串
-  const platformHtml = badges.join(' ');
-  // 纯文字版 (用于统计栏)
-  const platformText = Object.keys(counts).filter(k => counts[k] > 0).map(k => k.charAt(0).toUpperCase() + k.slice(1)).join(' / ') || 'MtcACG';
-
-  // 4. AJAX 翻页 (保持不变)
+  // 4. AJAX 逻辑 (保持不变)
   const format = url.searchParams.get('format');
   if (format === 'json') {
     const page = parseInt(url.searchParams.get('page')) || 1;
@@ -263,7 +254,7 @@ export async function handleArtistProfile(artistName, url, env) {
     return new Response(JSON.stringify(results), { headers: { 'Content-Type': 'application/json' } });
   }
 
-  // 5. 渲染
+  // 5. 渲染 HTML
   const { htmlArtistProfile } = await import('./templates.js');
   
   let updateTime = '未知';
@@ -277,12 +268,12 @@ export async function handleArtistProfile(artistName, url, env) {
     artist,
     count: meta.count,
     updateTime,
-    cover1,
-    cover2,
-    platformHtml, // 传这个带颜色的 HTML 进去
-    platformText  // 传这个纯文字给下面统计栏用
+    cover1, // 卡片背景
+    cover2, // 网页大背景
+    platformText
   }), {
     headers: { 'Content-Type': 'text/html;charset=UTF-8' }
   });
 }
+
 
