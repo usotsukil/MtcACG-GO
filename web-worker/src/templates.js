@@ -18,7 +18,15 @@ export const SIDEBAR_HTML = `
       <svg class="w-5 h-5 mr-3 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 11.5L12 4l9 7.5M5 10.5V20h5v-5h4v5h5v-9.5"/></svg>
       <span>首页</span>
     </a>
-    
+
+    <!-- 画师名人堂 (Sidebar Item) -->
+    <a href="/artists" class="flex items-center p-3 text-gray-300 hover:bg-white/10 rounded-lg transition">
+      <svg class="w-5 h-5 mr-3 text-yellow-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+      </svg>
+      <span class="bg-gradient-to-r from-yellow-200 to-yellow-500 bg-clip-text text-transparent font-bold">画师名人堂</span>
+    </a>
+
     <a href="javascript:void(0)" onclick="randomImage(); toggleSidebar();" class="flex items-center p-3 text-gray-300 hover:bg-white/10 rounded-lg transition">
       <svg class="w-5 h-5 mr-3 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h4l3 6 3-6h4M4 18h4l3-6 3 6h4"/></svg>
       <span>随机抽图看看0w0</span>
@@ -147,8 +155,16 @@ export function htmlHome() {
   ${SIDEBAR_HTML}
   
   <div class="header">
+    <div class="flex items-center">
     <div class="p-2 cursor-pointer" onclick="toggleSidebar()">
       <svg width="24" height="24" fill="none" stroke="white" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </div>
+        <!-- 画师名人堂 (Header Icon) -->
+    <a href="/artists" class="ml-2 p-2 text-gray-300 hover:text-yellow-400 transition" title="画师名人堂">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+      </svg>
+    </a>
     </div>
     <div class="search-bar">
       <input type="text" id="search" placeholder="  要搜索什么吖...." onchange="doSearch(this.value)">
@@ -475,6 +491,13 @@ export function htmlHome() {
            <button onclick="toggleSidebar()" class="text-gray-300 hover:text-white transition p-1">
              <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
            </button>
+               <!-- 画师名人堂 (Header Icon) -->
+         <a href="/artists" class="ml-2 p-2 text-gray-300 hover:text-yellow-400 transition" title="画师名人堂">
+           <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+             <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+           </svg>
+         </a>
+
            <h1 class="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">关于 MtcACG</h1>
          </div>
          <a href="/" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full transition border border-white/5">回到首页</a>
@@ -592,6 +615,15 @@ export function htmlDetail(params) {
           <svg class="w-5 h-5 mr-3 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 11.5L12 4l9 7.5M5 10.5V20h5v-5h4v5h5v-9.5"/></svg>
           <span>首页</span>
         </a>
+
+            <!-- 画师名人堂 (Sidebar Item) -->
+        <a href="/artists" class="flex items-center p-3 text-gray-300 hover:bg-white/10 rounded-lg transition">
+           <svg class="w-5 h-5 mr-3 text-yellow-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+           </svg>
+          <span class="bg-gradient-to-r from-yellow-200 to-yellow-500 bg-clip-text text-transparent font-bold">画师名人堂</span>
+        </a>
+    
         <a href="javascript:void(0)" onclick="randomImage(); toggleSidebar();" class="flex items-center p-3 text-gray-300 hover:bg-white/10 rounded-lg transition">
           <svg class="w-5 h-5 mr-3 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h4l3 6 3-6h4M4 18h4l3-6 3 6h4"/></svg>
           <span>随机抽图看看0w0</span>
@@ -755,7 +787,7 @@ export function htmlDetail(params) {
                     border border-white/20 rounded-xl backdrop-blur-sm">
           ${
             artist
-              ? `<a href="/?q=${encodeURIComponent(artist)}"
+              ? `<a href="/artist/${encodeURIComponent(artist)}"
                    class="inline-flex items-center gap-2 text-lg font-semibold text-white hover:text-pink-300 transition">
                    Artist(画师)： ${artist} 
                    <span class="opacity-70"> 🎨</span>
