@@ -1230,6 +1230,7 @@ export function htmlArtistProfile(data) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${artist} - 作品集</title>
+  <link rel="icon" type="image/png" href="https://pub-d07d03b8c35d40309ce9c6d8216e885b.r2.dev/ACGg.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     /* === 基础设置 === */
