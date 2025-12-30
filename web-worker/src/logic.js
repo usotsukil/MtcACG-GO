@@ -155,39 +155,52 @@ export async function handleBgRandom(includeR18, url, env) {
 }
 
 
-// logic.js - 添加或替换 handleArtists 函数
+// logic.js
 
 export async function handleArtists(url, env) {
-  const page = parseInt(url.searchParams.get('page')) || 1;
-  const pageSize = 50; // 每页 50 个画师
-  const offset = (page - 1) * pageSize;
+  const format = url.searchParams.get('format');
 
-  // SQL 逻辑：
-  // 1. 过滤空画师
-  // 2. 按收录数量倒序 (count DESC)
-  // 3. MAX(file_name) 作为一个粗略的封面获取方式（对于 SQLite/D1 足够快且有效）
-  const sql = `
-    SELECT artist, COUNT(*) as count, MAX(file_name) as cover
-    FROM images 
-    WHERE artist IS NOT NULL AND artist != '' 
-    GROUP BY artist 
-    ORDER BY count DESC
-    LIMIT ? OFFSET ?
-  `;
+  if (format === 'json') {
+    const page = parseInt(url.searchParams.get('page')) || 1;
+    const pageSize = 50;
+    const offset = (page - 1) * pageSize;
 
-  try {
-    const { results } = await env.DB.prepare(sql).bind(pageSize, offset).all();
+    // 关键修正：
+    // 我们需要找出每个画师“最新”的那张图的完整信息（封面、宽、高）。
+    // 在 SQLite/D1 中，简单的 GROUP BY 配合 MAX(id) 可能无法准确拿到该 id 对应的 width/height。
+    // 最标准的写法是用窗口函数 (Window Function) 或者子查询，但为了性能和兼容性，
+    // 我们利用 SQLite 的特性：在 GROUP BY 中，非聚合字段通常取的是“符合条件的一条”，但不保证是哪条。
+    // 所以最稳妥的是：先按 ID 倒序排好，再 GROUP BY（子查询法）。
     
-    // 动态导入模板
-    const { htmlArtists } = await import('./templates.js');
+    const sql = `
+      SELECT t.artist, COUNT(*) as count, t.file_name as cover, t.width, t.height
+      FROM (
+          SELECT * FROM images 
+          WHERE artist IS NOT NULL AND artist != ''
+          ORDER BY id DESC
+      ) t
+      GROUP BY t.artist
+      ORDER BY count DESC
+      LIMIT ? OFFSET ?
+    `;
     
-    return new Response(htmlArtists(results, page), {
-      headers: { 
-        'Content-Type': 'text/html;charset=UTF-8',
-        'Cache-Control': 'public, max-age=3600' // 缓存1小时
-      }
-    });
-  } catch (e) {
-    return new Response("Error: " + e.message, { status: 500 });
+    // 如果上面那个子查询太慢 (5万数据应该还好)，可以用简化的非严谨写法：
+    // SELECT artist, COUNT(*), file_name, width, height FROM images GROUP BY artist ...
+    // 但这样封面可能不是最新的。鉴于数据量不大，推荐上面的子查询写法。
+
+    try {
+      const { results } = await env.DB.prepare(sql).bind(pageSize, offset).all();
+      return new Response(JSON.stringify(results), {
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=3600' }
+      });
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+    }
   }
+
+  // 返回 HTML 骨架
+  const { htmlArtists } = await import('./templates.js');
+  return new Response(htmlArtists(), {
+    headers: { 'Content-Type': 'text/html;charset=UTF-8' }
+  });
 }
