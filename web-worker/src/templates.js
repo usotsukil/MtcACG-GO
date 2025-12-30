@@ -1167,11 +1167,8 @@ export function htmlArtists() {
 }
 
 
-// templates.js
-
 export function htmlArtistProfile(data) {
-  // 注意：这里不再接收 platformId
-  const { artist, count, updateTime, cover, platform, platformIcon, platformClass } = data;
+  const { artist, count, updateTime, cover1, cover2, platformText } = data;
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -1184,107 +1181,156 @@ export function htmlArtistProfile(data) {
     body { background: #121212; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     ::-webkit-scrollbar { width: 0; }
     
-    .banner-bg {
-      position: absolute; top: 0; left: 0; width: 100%; height: 50vh;
-      background-image: url('/image/${cover}?dl=jpg');
+    /* 1. 网页大背景 (使用 cover2) */
+    .page-bg {
+      position: fixed; inset: 0; z-index: -2;
+      background-image: url('/image/${cover2}?dl=jpg');
       background-size: cover; background-position: center;
-      mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
-      -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
-      opacity: 0.3; z-index: -1;
+      filter: blur(20px) brightness(0.4); /* 模糊更重，不抢视觉 */
+      transform: scale(1.1);
     }
 
+    /* 2. 导航栏 (三段式) */
     .nav-bar {
-      position: fixed; top: 0; left: 0; right: 0; padding: 16px 24px;
+      position: fixed; top: 0; left: 0; right: 0; height: 60px;
+      padding: 0 20px;
       display: flex; justify-content: space-between; align-items: center;
-      background: rgba(0,0,0,0.3); backdrop-filter: blur(10px); z-index: 50;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); z-index: 50;
       border-bottom: 1px solid rgba(255,255,255,0.05);
     }
+    .nav-left { display: flex; gap: 15px; align-items: center; }
+    .nav-center { position: absolute; left: 50%; transform: translateX(-50%); font-weight: 700; opacity: 0.9; display: none; }
+    .nav-right { font-weight: 800; font-size: 18px; letter-spacing: 1px; color: #fff; text-decoration: none; }
+    
+    @media(min-width: 768px) { .nav-center { display: block; } }
 
+    .icon-btn { 
+      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+      border-radius: 8px; background: rgba(255,255,255,0.1); 
+      color: #ddd; transition: .2s; cursor: pointer;
+    }
+    .icon-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+
+    /* 3. 信息卡片 (带有 cover1 背景) */
     .profile-card {
-      margin-top: 120px;
-      background: rgba(30, 30, 30, 0.6);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-top: 100px;
+      position: relative; overflow: hidden;
       border-radius: 20px;
-      padding: 30px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      padding: 40px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    /* 卡片动态背景层 */
+    .profile-card::before {
+      content: ''; position: absolute; inset: 0; z-index: -1;
+      background-image: url('/image/${cover1}?dl=jpg');
+      background-size: cover; background-position: center;
+      filter: blur(40px) brightness(0.5) saturate(1.5); /* 提高饱和度让卡片更好看 */
+      transform: scale(1.2);
+    }
+    /* 遮罩层确保文字可读 */
+    .profile-card::after {
+      content: ''; position: absolute; inset: 0; z-index: -1;
+      background: rgba(0,0,0,0.4); 
     }
 
     .platform-badge {
       display: inline-flex; align-items: center; gap: 6px;
-      padding: 4px 12px; border-radius: 99px; font-size: 13px; font-weight: 600; color: white;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      padding: 6px 14px; border-radius: 99px; font-size: 13px; font-weight: 600; 
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(5px); color: #fff;
     }
 
+    /* 统计数据 */
     .stat-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;
-      margin-top: 25px;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 30px;
     }
     .stat-item {
-      background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px;
-      display: flex; flex-direction: column; gap: 4px;
-      transition: background 0.2s;
+      background: rgba(0,0,0,0.3); border-radius: 12px; padding: 15px;
+      border: 1px solid rgba(255,255,255,0.05);
     }
-    .stat-item:hover { background: rgba(255,255,255,0.08); }
-    .stat-label { font-size: 12px; color: #aaa; }
-    .stat-value { font-size: 20px; font-weight: 700; color: #fff; }
+    .stat-label { font-size: 12px; color: #aaa; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+    .stat-value { font-size: 18px; font-weight: 700; color: #fff; }
 
+    /* 瀑布流 */
     .masonry-wrap { display: flex; gap: 16px; margin-top: 40px; align-items: flex-start; }
     .masonry-col { flex: 1; display: flex; flex-direction: column; gap: 16px; }
     
     .img-card {
       display: block; border-radius: 10px; overflow: hidden; background: #222;
       position: relative; transition: transform 0.2s;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
     }
-    .img-card:hover { transform: translateY(-4px); z-index: 10; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+    .img-card:hover { transform: translateY(-4px); z-index: 10; box-shadow: 0 12px 24px rgba(0,0,0,0.5); }
     .img-card img { width: 100%; height: auto; display: block; opacity: 0; transition: opacity 0.3s; }
     .img-card img.loaded { opacity: 1; }
   </style>
 </head>
 <body class="px-4 pb-20 md:px-10 lg:px-20">
   
-  <div class="banner-bg"></div>
+  <div class="page-bg"></div>
+  
+  <!-- 引入侧边栏 HTML -->
+  ${SIDEBAR_HTML}
 
   <div class="nav-bar">
-    <a href="/" class="text-xl font-bold tracking-tight">MtcACG</a>
-    <a href="/artists" class="text-sm text-gray-300 hover:text-white transition">← 返回画师墙</a>
+    <div class="nav-left">
+      <!-- 汉堡按钮 (点击打开侧边栏) -->
+      <div class="icon-btn" onclick="toggleSidebar()">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </div>
+      <!-- 返回按钮 -->
+      <a href="/artists" class="icon-btn" title="返回画师墙">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </a>
+    </div>
+
+    <div class="nav-center">
+      画师作品展
+    </div>
+
+    <a href="/" class="nav-right">
+      MtcACG
+    </a>
   </div>
 
   <div class="max-w-5xl mx-auto">
     <!-- 信息卡片 -->
     <div class="profile-card">
-      <div class="flex items-start justify-between">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <div class="flex items-center gap-4">
-             <h1 class="text-3xl md:text-4xl font-bold">${artist}</h1>
-             <!-- 动态颜色标签 -->
-             <span class="platform-badge ${platformClass}">
-                ${platformIcon} ${platform}
-             </span>
-          </div>
-          <p class="text-gray-400 mt-2 text-sm">MtcACG 收录画师</p>
+           <div class="flex flex-wrap items-center gap-4">
+             <h1 class="text-3xl md:text-4xl font-bold text-white shadow-sm">${artist}</h1>
+             <!-- 兼容多平台展示 -->
+             <div class="platform-badge">
+                ${platformText}
+             </div>
+           </div>
+           <p class="text-gray-300 mt-2 text-sm opacity-80">MtcACG 收录画师</p>
         </div>
       </div>
 
       <div class="stat-grid">
         <div class="stat-item">
-          <span class="stat-label">🖼️ 收录作品</span>
+          <span class="stat-label"><span class="w-2 h-2 rounded-full bg-green-400"></span> 收录作品</span>
           <span class="stat-value">${count} 张</span>
         </div>
         <div class="stat-item">
-          <span class="stat-label">📅 最近更新</span>
+          <span class="stat-label"><span class="w-2 h-2 rounded-full bg-blue-400"></span> 最近更新</span>
           <span class="stat-value">${updateTime}</span>
         </div>
         <div class="stat-item">
-          <span class="stat-label">📦 来源平台</span>
-          <span class="stat-value">${platform}</span>
+          <span class="stat-label"><span class="w-2 h-2 rounded-full bg-purple-400"></span> 来源平台</span>
+          <!-- 防止平台文字太长导致换行难看 -->
+          <span class="stat-value truncate block" title="${platformText}">${platformText}</span>
         </div>
       </div>
     </div>
 
+    <!-- 瀑布流区域 -->
     <div class="mt-12 mb-6 flex items-center gap-3">
        <span class="text-2xl font-bold">作品一览</span>
-       <span class="text-gray-600 text-sm font-mono">${count} ITEMS</span>
+       <span class="text-gray-500 text-sm font-mono tracking-widest">${count} ITEMS</span>
     </div>
 
     <div id="masonry" class="masonry-wrap"></div>
@@ -1298,7 +1344,6 @@ export function htmlArtistProfile(data) {
     let isLoading = false;
     const masonry = document.getElementById('masonry');
     const tip = document.getElementById('tip');
-
     
     let colCount = window.innerWidth < 768 ? 2 : (window.innerWidth < 1200 ? 3 : 4);
     let cols = [];
@@ -1363,5 +1408,4 @@ export function htmlArtistProfile(data) {
 </body>
 </html>`;
 }
-
 
