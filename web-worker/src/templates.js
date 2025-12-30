@@ -1201,7 +1201,7 @@ export function htmlArtistProfile(data) {
       position: fixed; inset: 0; z-index: -2;
       background-image: url('/image/${cover2}?dl=jpg');
       background-size: cover; background-position: center;
-      filter: blur(8px) brightness(0.5); 
+      filter: blur(25px) brightness(0.6); 
       transform: scale(1.1);
     }
 
