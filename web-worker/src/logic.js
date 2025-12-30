@@ -269,7 +269,7 @@ export async function handleArtistProfile(artistName, url, env) {
   const format = url.searchParams.get('format');
   if (format === 'json') {
     const page = parseInt(url.searchParams.get('page')) || 1;
-    const pageSize = 20;
+    const pageSize = 15;
     const offset = (page - 1) * pageSize;
     const postsSql = `SELECT * FROM images WHERE artist = ? ORDER BY created_at DESC LIMIT ? OFFSET ?`;
     const { results } = await env.DB.prepare(postsSql).bind(artist, pageSize, offset).all();
