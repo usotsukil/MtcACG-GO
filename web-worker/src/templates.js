@@ -1168,7 +1168,7 @@ export function htmlArtists() {
 
 
 export function htmlArtistProfile(data) {
-  const { artist, count, updateTime, cover1, cover2, platformText } = data;
+  const { artist, count, updateTime, cover1, cover2, platformHtml, platformText } = data;
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -1181,64 +1181,62 @@ export function htmlArtistProfile(data) {
     body { background: #121212; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     ::-webkit-scrollbar { width: 0; }
     
-    /* 1. 网页大背景 (使用 cover2) */
+    /* === 1. 背景模糊度优化 (原 blur(20px) -> blur(8px)) === */
     .page-bg {
       position: fixed; inset: 0; z-index: -2;
       background-image: url('/image/${cover2}?dl=jpg');
       background-size: cover; background-position: center;
-      filter: blur(20px) brightness(0.4); /* 模糊更重，不抢视觉 */
+      filter: blur(8px) brightness(0.4); 
       transform: scale(1.1);
     }
 
-    /* 2. 导航栏 (三段式) */
+    /* === 2. 纯净按钮样式 (去掉了背景色) === */
     .nav-bar {
       position: fixed; top: 0; left: 0; right: 0; height: 60px;
       padding: 0 20px;
       display: flex; justify-content: space-between; align-items: center;
-      background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); z-index: 50;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
+      background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); /* 渐变顶栏更自然 */
+      z-index: 50;
     }
-    .nav-left { display: flex; gap: 15px; align-items: center; }
-    .nav-center { position: absolute; left: 50%; transform: translateX(-50%); font-weight: 700; opacity: 0.9; display: none; }
-    .nav-right { font-weight: 800; font-size: 18px; letter-spacing: 1px; color: #fff; text-decoration: none; }
+    .nav-left { display: flex; gap: 8px; align-items: center; }
+    .nav-center { position: absolute; left: 50%; transform: translateX(-50%); font-weight: 700; opacity: 0.9; display: none; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+    .nav-right { font-weight: 800; font-size: 18px; letter-spacing: 1px; color: #fff; text-decoration: none; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
     
     @media(min-width: 768px) { .nav-center { display: block; } }
 
     .icon-btn { 
-      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
-      border-radius: 8px; background: rgba(255,255,255,0.1); 
-      color: #ddd; transition: .2s; cursor: pointer;
+      width: 40px; height: 40px; 
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; /* 圆形触摸区 */
+      color: rgba(255,255,255,0.9); 
+      transition: .2s; cursor: pointer;
+      /* background: rgba(0,0,0,0.2); 如果你完全不想要背景就把这行删掉，但我建议留一点点极其透明的背景方便点击 */
     }
-    .icon-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+    .icon-btn:hover { background: rgba(255,255,255,0.15); color: #fff; transform: scale(1.1); }
+    .icon-btn svg { filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5)); } /* 给图标加阴影，防背景太亮看不清 */
 
-    /* 3. 信息卡片 (带有 cover1 背景) */
+    /* === 3. 信息卡片模糊度优化 (原 blur(40px) -> blur(20px)) === */
     .profile-card {
       margin-top: 100px;
       position: relative; overflow: hidden;
-      border-radius: 20px;
+      border-radius: 24px;
       padding: 40px;
       box-shadow: 0 20px 50px rgba(0,0,0,0.5);
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
-    /* 卡片动态背景层 */
     .profile-card::before {
       content: ''; position: absolute; inset: 0; z-index: -1;
       background-image: url('/image/${cover1}?dl=jpg');
       background-size: cover; background-position: center;
-      filter: blur(40px) brightness(0.5) saturate(1.5); /* 提高饱和度让卡片更好看 */
-      transform: scale(1.2);
-    }
-    /* 遮罩层确保文字可读 */
-    .profile-card::after {
-      content: ''; position: absolute; inset: 0; z-index: -1;
-      background: rgba(0,0,0,0.4); 
+      filter: blur(20px) brightness(0.6) saturate(1.2); /* 降低模糊，稍微调亮 */
+      transform: scale(1.1);
     }
 
+    /* === 4. 彩色徽章样式 === */
     .platform-badge {
       display: inline-flex; align-items: center; gap: 6px;
-      padding: 6px 14px; border-radius: 99px; font-size: 13px; font-weight: 600; 
-      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.1);
-      backdrop-filter: blur(5px); color: #fff;
+      padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; 
+      border-width: 1px; backdrop-filter: blur(4px);
     }
 
     /* 统计数据 */
@@ -1246,10 +1244,10 @@ export function htmlArtistProfile(data) {
       display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 30px;
     }
     .stat-item {
-      background: rgba(0,0,0,0.3); border-radius: 12px; padding: 15px;
-      border: 1px solid rgba(255,255,255,0.05);
+      background: rgba(0,0,0,0.2); border-radius: 12px; padding: 15px;
+      border: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(5px);
     }
-    .stat-label { font-size: 12px; color: #aaa; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+    .stat-label { font-size: 12px; color: #ccc; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
     .stat-value { font-size: 18px; font-weight: 700; color: #fff; }
 
     /* 瀑布流 */
@@ -1257,7 +1255,7 @@ export function htmlArtistProfile(data) {
     .masonry-col { flex: 1; display: flex; flex-direction: column; gap: 16px; }
     
     .img-card {
-      display: block; border-radius: 10px; overflow: hidden; background: #222;
+      display: block; border-radius: 12px; overflow: hidden; background: #222;
       position: relative; transition: transform 0.2s;
       box-shadow: 0 4px 6px rgba(0,0,0,0.2);
     }
@@ -1270,18 +1268,17 @@ export function htmlArtistProfile(data) {
   
   <div class="page-bg"></div>
   
-  <!-- 引入侧边栏 HTML -->
   ${SIDEBAR_HTML}
 
   <div class="nav-bar">
     <div class="nav-left">
-      <!-- 汉堡按钮 (点击打开侧边栏) -->
+      <!-- 纯净汉堡按钮 -->
       <div class="icon-btn" onclick="toggleSidebar()">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 12h16M4 6h16M4 18h16"/></svg>
       </div>
-      <!-- 返回按钮 -->
+      <!-- 纯净返回按钮 -->
       <a href="/artists" class="icon-btn" title="返回画师墙">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 19l-7-7 7-7"/></svg>
       </a>
     </div>
 
@@ -1299,42 +1296,40 @@ export function htmlArtistProfile(data) {
     <div class="profile-card">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-           <div class="flex flex-wrap items-center gap-4">
+           <div class="flex flex-wrap items-center gap-3">
              <h1 class="text-3xl md:text-4xl font-bold text-white shadow-sm">${artist}</h1>
-             <!-- 兼容多平台展示 -->
-             <div class="platform-badge">
-                ${platformText}
+             <!-- 这里直接插入我们生成的彩色 HTML -->
+             <div class="flex gap-2">
+                ${platformHtml}
              </div>
            </div>
-           <p class="text-gray-300 mt-2 text-sm opacity-80">MtcACG 收录画师</p>
+           <p class="text-gray-200 mt-2 text-sm opacity-90 font-medium">MtcACG 收录画师</p>
         </div>
       </div>
 
       <div class="stat-grid">
         <div class="stat-item">
-          <span class="stat-label"><span class="w-2 h-2 rounded-full bg-green-400"></span> 收录作品</span>
+          <span class="stat-label"><span class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]"></span> 收录作品</span>
           <span class="stat-value">${count} 张</span>
         </div>
         <div class="stat-item">
-          <span class="stat-label"><span class="w-2 h-2 rounded-full bg-blue-400"></span> 最近更新</span>
+          <span class="stat-label"><span class="w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.5)]"></span> 最近更新</span>
           <span class="stat-value">${updateTime}</span>
         </div>
         <div class="stat-item">
-          <span class="stat-label"><span class="w-2 h-2 rounded-full bg-purple-400"></span> 来源平台</span>
-          <!-- 防止平台文字太长导致换行难看 -->
+          <span class="stat-label"><span class="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.5)]"></span> 来源平台</span>
           <span class="stat-value truncate block" title="${platformText}">${platformText}</span>
         </div>
       </div>
     </div>
 
-    <!-- 瀑布流区域 -->
     <div class="mt-12 mb-6 flex items-center gap-3">
-       <span class="text-2xl font-bold">作品一览</span>
-       <span class="text-gray-500 text-sm font-mono tracking-widest">${count} ITEMS</span>
+       <span class="text-2xl font-bold">Gallery</span>
+       <span class="text-gray-400 text-sm font-mono tracking-widest border-l border-gray-600 pl-3">${count} WORKS</span>
     </div>
 
     <div id="masonry" class="masonry-wrap"></div>
-    <div id="tip" class="text-center py-10 text-gray-500 text-sm">加载中...</div>
+    <div id="tip" class="text-center py-10 text-gray-500 text-sm">Loading...</div>
   </div>
 
   <script>
@@ -1372,7 +1367,7 @@ export function htmlArtistProfile(data) {
         
         if(data.length === 0) {
           done = true;
-          tip.textContent = '没有更多了';
+          tip.textContent = 'End of Gallery';
           return;
         }
 
@@ -1408,4 +1403,5 @@ export function htmlArtistProfile(data) {
 </body>
 </html>`;
 }
+
 
