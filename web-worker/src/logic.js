@@ -166,10 +166,10 @@ export async function handleArtists(url, env) {
     const pageSize = 50;
     const offset = (page - 1) * pageSize;
 
-    // ✅ 修改：根据是否有搜索词，决定 SQL 和参数
+// ✅ 根据是否有搜索词，决定 SQL 和参数
     let sql;
     let params;
-    
+
     if (q.trim()) {
       // 有搜索词：模糊匹配画师名
       sql = `
@@ -201,7 +201,8 @@ export async function handleArtists(url, env) {
     }
 
     try {
-      const { results } = await env.DB.prepare(sql).bind(pageSize, offset).all();
+      // ✅ 这里改成用动态的 params
+      const { results } = await env.DB.prepare(sql).bind(...params).all();
       return new Response(JSON.stringify(results), {
         headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=3600' }
       });
