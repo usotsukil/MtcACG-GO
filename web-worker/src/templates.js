@@ -1210,7 +1210,7 @@ export function htmlArtistProfile(data) {
       position: fixed; inset: 0; z-index: -2;
       background-image: url('/image/${cover2}?dl=jpg');
       background-size: cover; background-position: center;
-      filter: blur(25px) brightness(0.6); 
+      filter: blur(3px) brightness(0.6); 
       transform: scale(1.1);
       transition: opacity 1s;
     }
@@ -1237,7 +1237,7 @@ export function htmlArtistProfile(data) {
     /* === 优化点1：按钮居中修复 === */
     .icon-btn { 
       width: 38px; height: 38px; 
-      display: flex; align-items: center; justify-content: center; /* 核心居中代码 */
+      display: flex; align-items: center; justify-content: center; 
       border-radius: 10px; /* 圆角稍微大一点更现代 */
       background: rgba(255,255,255,0.1); 
       border: 1px solid rgba(255,255,255,0.05);
@@ -1265,7 +1265,7 @@ export function htmlArtistProfile(data) {
       background-image: url('/image/${cover1}?dl=jpg');
       background-size: cover; background-position: center;
       /* 关键调整：亮度 0.7 (之前是0.5)，模糊度 50px (更柔和) */
-      filter: blur(50px) brightness(0.7) saturate(1.2); 
+      filter: blur(15px) brightness(0.6) saturate(1.2); 
       transform: scale(1.2);
     }
     
@@ -1405,7 +1405,7 @@ export function htmlArtistProfile(data) {
     const tip = document.getElementById('tip');
     
     // 智能列数：手机2列，平板3列，电脑4列
-    let colCount = window.innerWidth < 768 ? 2 : (window.innerWidth < 1200 ? 3 : 4);
+    let colCount = window.innerWidth < 768 ? 2 : (window.innerWidth < 1200 ? 4 : 5);
     let cols = [];
     let colHeights = new Array(colCount).fill(0);
 
