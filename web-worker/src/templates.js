@@ -1419,7 +1419,7 @@ export function htmlArtistProfile(data) {
     </div>
 
     <!-- 中间：画师名称 -->
-    <div class="font-bold text-lg tracking-wide truncate max-w-xs">${artist}的作品展}的}de}}d    <!-- 右侧：返回首页 -->
+    <div class="font-bold text-lg tracking-wide truncate max-w-xs">${artist}的作品展</div>    <!-- 右侧：返回首页 -->
     <a href="/" class="text-gray-300 hover:text-white transition font-semibold">MtcACG</a>
   </div>
 
