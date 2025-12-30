@@ -1281,39 +1281,36 @@ export function htmlArtistProfile(data) {
       transition: opacity 1s;
     }
 
-    /* === 导航栏 === */
-    .nav-bar {
-      position: fixed; top: 0; left: 0; right: 0; height: 60px;
-      padding: 0 16px; /* 稍微缩小内边距 */
-      display: flex; justify-content: space-between; align-items: center;
-      background: rgba(0,0,0,0.3); /* 降低导航栏黑度，更通透 */
-      backdrop-filter: blur(10px); z-index: 50;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
+        /* === 顶部导航栏（统一风格） === */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+      background: rgba(10, 10, 10, 0.7); 
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 12px 20px;
+      display: flex; align-items: center; justify-content: space-between;
     }
-    .nav-left { display: flex; gap: 12px; align-items: center; }
-    .nav-center { 
-      position: absolute; left: 50%; transform: translateX(-50%); 
-      font-weight: 700; opacity: 0.9; font-size: 15px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-      display: none; 
-    }
-    .nav-right { font-weight: 800; font-size: 18px; letter-spacing: 1px; color: #fff; text-decoration: none; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
     
-    @media(min-width: 768px) { .nav-center { display: block; } }
-
-    /* === 优化点1：按钮居中修复 === */
-    .icon-btn { 
-      width: 38px; height: 38px; 
-      display: flex; align-items: center; justify-content: center; 
-      border-radius: 10px; /* 圆角稍微大一点更现代 */
-      background: rgba(255,255,255,0.1); 
-      border: 1px solid rgba(255,255,255,0.05);
-      color: #eee; transition: .2s; cursor: pointer;
-    }
-    .icon-btn:hover { background: rgba(255,255,255,0.25); color: #fff; transform: translateY(-1px); }
-    .icon-btn:active { transform: scale(0.95); }
-    
-    /* 强制 SVG 居中 */
-    .icon-btn svg { display: block; } 
+    /* Tailwind 工具类（如果环境没有自动加载就加上） */
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .gap-2 { gap: 0.5rem; }
+    .p-2 { padding: 0.5rem; }
+    .rounded-full { border-radius: 9999px; }
+    .transition { transition: all 0.2s; }
+    .hover\:bg-white\/10:hover { background: rgba(255,255,255,0.1); }
+    .hover\:bg-white\/20:hover { background: rgba(255,255,255,0.2); }
+    .cursor-pointer { cursor: pointer; }
+    .text-yellow-400 { color: #fbbf24; }
+    .bg-white\/10 { background: rgba(255,255,255,0.1); }
+    .text-gray-300 { color: #d1d5db; }
+    .hover\:text-white:hover { color: #fff; }
+    .font-bold { font-weight: 700; }
+    .font-semibold { font-weight: 600; }
+    .text-lg { font-size: 1.125rem; }
+    .tracking-wide { letter-spacing: 0.025em; }
+    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .max-w-xs { max-width: 20rem; }
 
     /* === 优化点2：信息卡片 (调亮 & 玻璃感) === */
     .profile-card {
@@ -1407,25 +1404,25 @@ export function htmlArtistProfile(data) {
   
   ${typeof SIDEBAR_HTML !== 'undefined' ? SIDEBAR_HTML : ''}
 
-  <div class="nav-bar">
-    <div class="nav-left">
-      <!-- 汉堡按钮 -->
-      <div class="icon-btn" onclick="toggleSidebar()">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
-      </div>
-      <!-- 返回按钮 -->
-      <a href="/artists" class="icon-btn" title="返回画师墙">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-      </a>
+  <div class="header">
+    <!-- 左侧：汉堡菜单 + 名人堂入口 -->
+    <div class="flex items-center gap-2">
+        <div class="p-2 cursor-pointer hover:bg-white/10 rounded-full transition" onclick="toggleSidebar()">
+          <svg width="24" height="24" fill="none" stroke="white" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+        </div>
+        <!-- 画师名人堂入口（高亮） -->
+        <a href="/artists" class="p-2 text-yellow-400 bg-white/10 rounded-full transition hover:bg-white/20" title="画师名人堂">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 4 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+        </a>
     </div>
 
-    <div class="nav-center">
-      画师作品展
-    </div>
+    <!-- 中间：画师名称 -->
+    <div class="font-bold text-lg tracking-wide truncate max-w-xs">${artist}</div>
 
-    <a href="/" class="nav-right">
-      MtcACG
-    </a>
+    <!-- 右侧：返回首页 -->
+    <a href="/" class="text-gray-300 hover:text-white transition font-semibold">MtcACG</a>
   </div>
 
   <div class="max-w-5xl mx-auto">
