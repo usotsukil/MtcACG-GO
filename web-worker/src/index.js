@@ -1,6 +1,7 @@
 import { htmlHome, htmlAbout } from './templates.js';
 import { proxyTelegramImage, handleDetail, handleApiPosts, handleBgRandom } from './logic.js';
 import { handleArtists } from './logic.js';
+import { handleArtistProfile } from './logic.js';
 
 export default {
   async fetch(request, env, ctx) {
@@ -69,6 +70,12 @@ export default {
     // 添加路由
     if (path === '/artists') {
       return await handleArtists(url, env);
+    }
+
+    const artistMatch = path.match(/^\/artist\/(.+)$/);
+    if (artistMatch) {
+     // artistMatch[1] 就是画师名字
+    return await handleArtistProfile(artistMatch[1], url, env);
     }
 
     // 7. 默认兜底
