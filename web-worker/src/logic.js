@@ -153,3 +153,41 @@ export async function handleBgRandom(includeR18, url, env) {
     headers: { 'Content-Type': 'application/json' }
   });
 }
+
+
+// logic.js - 添加或替换 handleArtists 函数
+
+export async function handleArtists(url, env) {
+  const page = parseInt(url.searchParams.get('page')) || 1;
+  const pageSize = 50; // 每页 50 个画师
+  const offset = (page - 1) * pageSize;
+
+  // SQL 逻辑：
+  // 1. 过滤空画师
+  // 2. 按收录数量倒序 (count DESC)
+  // 3. MAX(file_name) 作为一个粗略的封面获取方式（对于 SQLite/D1 足够快且有效）
+  const sql = `
+    SELECT artist, COUNT(*) as count, MAX(file_name) as cover
+    FROM images 
+    WHERE artist IS NOT NULL AND artist != '' 
+    GROUP BY artist 
+    ORDER BY count DESC
+    LIMIT ? OFFSET ?
+  `;
+
+  try {
+    const { results } = await env.DB.prepare(sql).bind(pageSize, offset).all();
+    
+    // 动态导入模板
+    const { htmlArtists } = await import('./templates.js');
+    
+    return new Response(htmlArtists(results, page), {
+      headers: { 
+        'Content-Type': 'text/html;charset=UTF-8',
+        'Cache-Control': 'public, max-age=3600' // 缓存1小时
+      }
+    });
+  } catch (e) {
+    return new Response("Error: " + e.message, { status: 500 });
+  }
+}
