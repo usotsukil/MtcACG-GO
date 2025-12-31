@@ -224,6 +224,7 @@ export function htmlHome() {
       <!--<input type="text" id="search" placeholder="  要搜索什么吖...." onchange="doSearch(this.value)"> -->
     <!--</div> -->
     <a href="/" class="logo">MtcACG</a>
+   </div>
   </div>
 
   <div id="masonry" class="masonry-wrap"></div>
