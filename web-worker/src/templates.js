@@ -210,7 +210,8 @@ export function htmlHome() {
       </svg>
     </a>
     </div>
-    <div class="search-container">
+   <div class="flex items-center gap-3">
+     <div class="search-container" style="margin: 0;">
       <input type="text" id="search" class="search-input" placeholder="搜索标签或标题..." onkeydown="handleHomeSearch(event)">
       <button class="search-btn" onclick="toggleHomeSearch()">
         <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
