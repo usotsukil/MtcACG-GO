@@ -129,10 +129,54 @@ export function htmlHome() {
     #bg-layer { position: fixed; inset: 0; z-index: -1; background-size: cover; background-position: center; filter: blur(6px) brightness(0.6); opacity: 0; transition: opacity 1s; pointer-events: none; }
     .header { position: fixed; top: 0; left: 0; right: 0; z-index: 28; background: rgba(18, 18, 18, 0.90); backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
     .logo { font-weight: 800; font-size: 18px; letter-spacing: 1px; color: #fff; text-decoration: none; }
-    .search-bar { flex: 1; max-width: 400px; margin: 0 16px; position: relative; }
-    input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 8px 16px; border-radius: 99px; width: 100%; outline: none; transition: 0.3s; font-size: 14px; }
-    input:focus { background: rgba(0,0,0,0.6); border-color: #ec4899; }
+    /*.search-bar { flex: 1; max-width: 400px; margin: 0 16px; position: relative; } */
+    /*input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 8px 16px; border-radius: 99px; width: 100%; outline: none; transition: 0.3s; font-size: 14px; } */
+    /*input:focus { background: rgba(0,0,0,0.6); border-color: #ec4899; } */
     .masonry-wrap { display: flex; gap: 12px; padding: 12px; align-items: flex-start; }
+        /* === 搜索框容器（可展开） === */
+    .search-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      margin: 0 12px;
+    }
+    .search-input {
+      width: 0;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: white;
+      outline: none;
+      transition: all 0.3s ease;
+      border-bottom: 1px solid transparent;
+      opacity: 0;
+      font-size: 14px;
+    }
+    .search-input.expanded {
+      width: 300px;
+      padding: 4px 8px;
+      border-bottom: 1px solid #ec4899;
+      opacity: 1;
+      margin-right: 8px;
+    }
+    /* 移动端搜索框稍窄 */
+    @media(max-width: 640px) {
+      .search-input.expanded { width: 140px; }
+    }
+    
+    .search-btn {
+      background: none;
+      border: none;
+      color: #ccc;
+      cursor: pointer;
+      padding: 4px;
+      transition: color 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .search-btn:hover { color: #fff; }
+
     @media(min-width: 768px) { .masonry-wrap { padding: 20px; gap: 20px; max-width: 1800px; margin: 0 auto; } }
     .masonry-col { flex: 1; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
     @media(min-width: 768px) { .masonry-col { gap: 20px; } }
@@ -166,9 +210,18 @@ export function htmlHome() {
       </svg>
     </a>
     </div>
-    <div class="search-bar">
-      <input type="text" id="search" placeholder="  要搜索什么吖...." onchange="doSearch(this.value)">
+    <div class="search-container">
+      <input type="text" id="search" class="search-input" placeholder="搜索标签或标题..." onkeydown="handleHomeSearch(event)">
+      <button class="search-btn" onclick="toggleHomeSearch()">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="M21 21l-4.35-4.35"/>
+        </svg>
+      </button>
     </div>
+    <!--<div class="search-bar"> -->
+      <!--<input type="text" id="search" placeholder="  要搜索什么吖...." onchange="doSearch(this.value)"> -->
+    <!--</div> -->
     <a href="/" class="logo">MtcACG</a>
   </div>
 
@@ -190,6 +243,24 @@ export function htmlHome() {
   <div id="tip" class="loading-tip">在加载啦…别、别急呀喵～</div>
 
   <script>
+    // === 🆕 搜索框展开/收起逻辑 ===
+    function toggleHomeSearch() {
+      const input = document.getElementById('search');
+      const isExpanded = input.classList.contains('expanded');
+      
+      if (isExpanded && input.value.trim() !== '') {
+        doSearch(input.value);
+      } else {
+        input.classList.toggle('expanded');
+        if (!isExpanded) input.focus();
+      }
+    }
+    
+    function handleHomeSearch(e) {
+      if (e.key === 'Enter') {
+        doSearch(e.target.value);
+      }
+    }
     const masonry = document.getElementById('masonry');
     const bgLayer = document.getElementById('bg-layer');
     const tip = document.getElementById('tip');
@@ -201,9 +272,13 @@ export function htmlHome() {
     if(q) {
         document.addEventListener('DOMContentLoaded', () => {
              const searchInput = document.getElementById('search');
-             if(searchInput) searchInput.value = q;
+             if(searchInput) {
+                 searchInput.value = q;
+                 searchInput.classList.add('expanded'); // ← 自动展开搜索框
+             }
         });
     }
+
     
     let isLoading = false;
     let done = false;
@@ -1559,7 +1634,7 @@ export function htmlArtistProfile(data) {
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
-        const newCount = window.innerWidth < 768 ? 2 : (window.innerWidth < 1200 ? 3 : 4);
+        const newCount = window.innerWidth < 768 ? 2 : (window.innerWidth < 1200 ? 4 : 5);
         if(newCount !== colCount) {
            colCount = newCount;
            page = 1; done = false;
